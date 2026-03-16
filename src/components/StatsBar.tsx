@@ -18,22 +18,20 @@ const StatsBar = ({ clients }: StatsBarProps) => {
   }).length;
 
   const stats = [
-    { label: "TOTAL CLIENTES", value: totalClients.toString(), icon: Users },
-    { label: "DEALS ABERTOS", value: openDeals.toString(), icon: TrendingUp },
-    { label: "PIPELINE TOTAL", value: `${totalClients} deals`, icon: DollarSign },
-    { label: "FECHADOS ESTE MÊS", value: closedWonThisMonth.toString(), icon: CheckCircle },
+    { label: "Total Clientes", value: totalClients.toString(), icon: Users },
+    { label: "Deals Abertos", value: openDeals.toString(), icon: TrendingUp },
+    { label: "Pipeline Total", value: `${totalClients} deals`, icon: DollarSign },
+    { label: "Fechados Este Mês", value: closedWonThisMonth.toString(), icon: CheckCircle },
   ];
 
   return (
-    <div className="border-b border-border px-6 py-3 flex items-center gap-8">
+    <div className="bg-card border-b border-border px-6 py-4 flex items-center gap-10">
       {stats.map((stat) => (
         <div key={stat.label} className="flex items-center gap-3">
           <stat.icon className="w-4 h-4 text-muted-foreground" />
           <div>
-            <p className="font-data text-[10px] uppercase tracking-wider text-muted-foreground">
-              {stat.label}
-            </p>
-            <p className="font-data text-lg font-bold text-foreground">{stat.value}</p>
+            <p className="text-xs text-muted-foreground">{stat.label}</p>
+            <p className="text-xl font-bold text-foreground">{stat.value}</p>
           </div>
         </div>
       ))}

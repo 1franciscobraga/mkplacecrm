@@ -59,20 +59,11 @@ export interface ExtractedData {
   otherRelevantInfo: string | null;
 }
 
-export const STAGE_COLORS: Record<DealStage, string> = {
-  "Prospecção": "text-muted-foreground",
-  "Qualificação": "text-primary",
-  "Proposta Enviada": "text-blue-400",
-  "Negociação": "text-warning",
-  "Fechado - Ganho": "text-emerald-400",
-  "Fechado - Perdido": "text-destructive",
-};
-
-export const STAGE_DOT_COLORS: Record<DealStage, string> = {
-  "Prospecção": "bg-muted-foreground",
-  "Qualificação": "bg-primary",
-  "Proposta Enviada": "bg-blue-400",
-  "Negociação": "bg-warning",
-  "Fechado - Ganho": "bg-emerald-400",
-  "Fechado - Perdido": "bg-destructive",
+export const STAGE_BADGE_STYLES: Record<DealStage, { bg: string; text: string; dot: string }> = {
+  "Prospecção": { bg: "bg-gray-100", text: "text-gray-600", dot: "bg-gray-400" },
+  "Qualificação": { bg: "bg-blue-50", text: "text-blue-600", dot: "bg-blue-400" },
+  "Proposta Enviada": { bg: "bg-violet-50", text: "text-violet-600", dot: "bg-violet-400" },
+  "Negociação": { bg: "bg-amber-50", text: "text-amber-600", dot: "bg-amber-400" },
+  "Fechado - Ganho": { bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
+  "Fechado - Perdido": { bg: "bg-red-50", text: "text-red-600", dot: "bg-red-400" },
 };

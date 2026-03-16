@@ -14,8 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["DM Sans", "sans-serif"],
-        mono: ["Space Mono", "monospace"],
+        sans: ["Inter", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -55,21 +54,6 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
-        navy: {
-          900: "#0A0F1E",
-          800: "#111827",
-          700: "#1F2937",
-        },
-        teal: {
-          DEFAULT: "#00D4AA",
-          50: "rgba(0, 212, 170, 0.05)",
-          100: "rgba(0, 212, 170, 0.1)",
-          200: "rgba(0, 212, 170, 0.2)",
-          500: "rgba(0, 212, 170, 0.5)",
-        },
-        amber: {
-          DEFAULT: "#F59E0B",
-        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -84,7 +68,15 @@ export default {
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
-        sm: "2px",
+        sm: "calc(var(--radius) - 4px)",
+        xl: "12px",
+        "2xl": "16px",
+      },
+      boxShadow: {
+        card: "0 1px 3px rgba(0,0,0,0.08)",
+        "card-hover": "0 4px 12px rgba(0,0,0,0.1)",
+        modal: "0 20px 60px rgba(0,0,0,0.15)",
+        "input-focus": "0 0 0 3px rgba(37,99,235,0.15)",
       },
       keyframes: {
         "accordion-down": {
@@ -95,15 +87,15 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        "pulse-glow": {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.7" },
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "spin-slow": "spin-slow 1s linear infinite",
       },
     },
   },
