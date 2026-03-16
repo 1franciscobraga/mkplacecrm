@@ -75,7 +75,7 @@ const normalizeMeetings = (value: unknown): Meeting[] => {
         transcript,
       };
     })
-    .filter((meeting): meeting is Meeting => Boolean(meeting));
+    .filter(Boolean) as Meeting[];
 };
 
 const generateClientId = () =>
