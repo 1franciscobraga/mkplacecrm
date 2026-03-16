@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Client, DealStage, DEAL_STAGES, ExtractedData } from "@/types/crm";
+import { useState, useEffect } from "react";
+import { Client, ExtractedData } from "@/types/crm";
 import { X, Info } from "lucide-react";
 import ClientFormFields from "./ClientFormFields";
 
@@ -14,31 +14,46 @@ interface ManualClientModalProps {
 const emptyData: ExtractedData = {
   clientName: "",
   projectName: null,
-  contactPerson: null,
   meetingDate: null,
-  dealStage: "Prospecção",
+  businessModel: null,
+  contactName: null,
+  contactRole: null,
+  contactEmail: null,
+  contactPhone: null,
+  companyGroup: null,
+  executiveSummary: null,
+  painPointsAndChallenges: [],
+  goalsAndExpectations: [],
+  clientDifferentials: [],
   dealValue: null,
-  painPoints: [],
-  goals: [],
-  expectations: [],
-  nextActions: [],
-  differentials: [],
-  technicalNotes: null,
-  otherRelevantInfo: null,
+  revenueModel: null,
+  clientTimeline: null,
+  budgetMentioned: null,
+  techStack: null,
+  implementationComplexity: null,
+  nextSteps: [],
+  responsibleParties: null,
+  nextContactDate: null,
+  dealStage: "Prospecção",
+  confidenceLevel: null,
+  urgency: null,
+  risk: null,
+  expansionPotential: null,
+  priceSensitivity: null,
 };
 
 const ManualClientModal = ({ open, onClose, onSave, prefilled, aiBanner }: ManualClientModalProps) => {
   const [data, setData] = useState<ExtractedData>(prefilled || emptyData);
 
+  useEffect(() => {
+    if (prefilled) setData(prefilled);
+    else if (open) setData(emptyData);
+  }, [prefilled, open]);
+
   const resetAndClose = () => {
     setData(emptyData);
     onClose();
   };
-
-  // Sync prefilled when it changes
-  if (prefilled && data === emptyData) {
-    setData(prefilled);
-  }
 
   const handleSave = () => {
     if (!data.clientName.trim()) return;
@@ -62,7 +77,7 @@ const ManualClientModal = ({ open, onClose, onSave, prefilled, aiBanner }: Manua
   return (
     <>
       <div className="fixed inset-0 bg-foreground/20 backdrop-blur-[2px] z-50" onClick={resetAndClose} />
-      <div className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl md:max-h-[85vh] bg-card rounded-xl shadow-modal z-50 flex flex-col overflow-hidden">
+      <div className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-4xl md:max-h-[85vh] bg-card rounded-xl shadow-modal z-50 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <h2 className="font-semibold text-base">
             {aiBanner ? "Revisar Dados Extraídos" : "Adicionar Cliente Manualmente"}
@@ -80,7 +95,7 @@ const ManualClientModal = ({ open, onClose, onSave, prefilled, aiBanner }: Manua
             </div>
           )}
 
-          <ClientFormFields data={data} onChange={setData} />
+          <ClientFormFields data={data} onChange={setData} showSidebar={!!aiBanner} />
         </div>
 
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">

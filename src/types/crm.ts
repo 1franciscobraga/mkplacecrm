@@ -15,21 +15,48 @@ export const DEAL_STAGES: DealStage[] = [
   "Fechado - Perdido",
 ];
 
+export type ComplexityLevel = "Baixa" | "Média" | "Alta";
+export type SensitivityLevel = "Baixa" | "Média" | "Alta";
+export type PotentialLevel = "Baixo" | "Médio" | "Alto";
+
 export interface Client {
   id: string;
+  // Identificação
   clientName: string;
   projectName: string | null;
-  contactPerson: string | null;
   meetingDate: string | null;
-  dealStage: DealStage;
+  businessModel: string | null;
+  // Contato Principal
+  contactName: string | null;
+  contactRole: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  companyGroup: string | null;
+  // Análise Comercial
+  executiveSummary: string | null;
+  painPointsAndChallenges: string[];
+  goalsAndExpectations: string[];
+  clientDifferentials: string[];
+  // Financeiro & Negócio
   dealValue: string | null;
-  painPoints: string[];
-  goals: string[];
-  expectations: string[];
-  nextActions: string[];
-  differentials: string[];
-  technicalNotes: string | null;
-  otherRelevantInfo: string | null;
+  revenueModel: string | null;
+  clientTimeline: string | null;
+  budgetMentioned: string | null;
+  // Contexto Técnico
+  techStack: string | null;
+  implementationComplexity: ComplexityLevel | null;
+  // Plano de Ação
+  nextSteps: string[];
+  responsibleParties: string | null;
+  nextContactDate: string | null;
+  // Sidebar / Meta
+  dealStage: DealStage;
+  confidenceLevel: number | null;
+  urgency: ComplexityLevel | null;
+  risk: ComplexityLevel | null;
+  expansionPotential: PotentialLevel | null;
+  priceSensitivity: SensitivityLevel | null;
+  // System
   assignedTo: string;
   createdAt: string;
   meetings: Meeting[];
@@ -46,17 +73,32 @@ export interface Meeting {
 export interface ExtractedData {
   clientName: string;
   projectName: string | null;
-  contactPerson: string | null;
   meetingDate: string | null;
-  dealStage: DealStage;
+  businessModel: string | null;
+  contactName: string | null;
+  contactRole: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  companyGroup: string | null;
+  executiveSummary: string | null;
+  painPointsAndChallenges: string[];
+  goalsAndExpectations: string[];
+  clientDifferentials: string[];
   dealValue: string | null;
-  painPoints: string[];
-  goals: string[];
-  expectations: string[];
-  nextActions: string[];
-  differentials: string[];
-  technicalNotes: string | null;
-  otherRelevantInfo: string | null;
+  revenueModel: string | null;
+  clientTimeline: string | null;
+  budgetMentioned: string | null;
+  techStack: string | null;
+  implementationComplexity: ComplexityLevel | null;
+  nextSteps: string[];
+  responsibleParties: string | null;
+  nextContactDate: string | null;
+  dealStage: DealStage;
+  confidenceLevel: number | null;
+  urgency: ComplexityLevel | null;
+  risk: ComplexityLevel | null;
+  expansionPotential: PotentialLevel | null;
+  priceSensitivity: SensitivityLevel | null;
 }
 
 export const STAGE_BADGE_STYLES: Record<DealStage, { bg: string; text: string; dot: string }> = {
