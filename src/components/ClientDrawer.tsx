@@ -1,5 +1,6 @@
-import { Client, STAGE_BADGE_STYLES, DEAL_STAGES, DealStage } from "@/types/crm";
-import { X, Calendar, Target, AlertTriangle, Zap, FileText, RotateCcw, Building2, User, Mail, Phone, DollarSign, Clock, Cpu } from "lucide-react";
+import { useState } from "react";
+import { Client, STAGE_BADGE_STYLES, DEAL_STAGES, DealStage, ComplexityLevel, PotentialLevel, SensitivityLevel } from "@/types/crm";
+import { X, Pencil, RotateCcw } from "lucide-react";
 
 interface ClientDrawerProps {
   client: Client | null;
@@ -8,154 +9,235 @@ interface ClientDrawerProps {
 }
 
 const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Client | null>(null);
+
   if (!client) return null;
 
-  const badge = STAGE_BADGE_STYLES[client.dealStage];
+  const startEdit = () => {
+    setDraft({ ...client, painPointsAndChallenges: [...(client.painPointsAndChallenges || [])], goalsAndExpectations: [...(client.goalsAndExpectations || [])], clientDifferentials: [...(client.clientDifferentials || [])], nextSteps: [...(client.nextSteps || [])] });
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setDraft(null);
+    setEditing(false);
+  };
+
+  const saveEdit = () => {
+    if (draft) {
+      onUpdate(draft);
+      setEditing(false);
+      setDraft(null);
+    }
+  };
+
+  const d = editing && draft ? draft : client;
+  const set = (field: keyof Client, value: any) => {
+    if (draft) setDraft({ ...draft, [field]: value });
+  };
+
+  const badge = STAGE_BADGE_STYLES[d.dealStage];
 
   return (
     <>
       <div className="fixed inset-0 bg-foreground/20 backdrop-blur-[2px] z-40" onClick={onClose} />
-      <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-card border-l border-border z-50 overflow-y-auto shadow-modal animate-in slide-in-from-right duration-200">
+      <div className="fixed right-0 top-0 h-full w-[60%] min-w-[480px] max-w-[800px] bg-card border-l border-border z-50 overflow-y-auto shadow-modal animate-in slide-in-from-right duration-200">
         <div className="p-6">
+          {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h2 className="font-semibold text-lg text-foreground">{client.clientName}</h2>
-              {client.projectName && <p className="text-sm text-muted-foreground">{client.projectName}</p>}
-              {client.businessModel && <p className="text-xs text-muted-foreground mt-0.5">{client.businessModel}</p>}
+              <h2 className="font-semibold text-lg text-foreground">{d.clientName}</h2>
+              <p className="text-sm text-muted-foreground">{d.projectName || "—"}</p>
             </div>
-            <button onClick={onClose} className="p-1.5 hover:bg-secondary rounded-lg transition-colors">
-              <X className="w-5 h-5 text-muted-foreground" />
-            </button>
+            <div className="flex items-center gap-2">
+              {editing ? (
+                <>
+                  <button onClick={cancelEdit} className="h-8 px-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">Cancelar</button>
+                  <button onClick={saveEdit} className="h-8 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-all">Salvar Alterações</button>
+                </>
+              ) : (
+                <button onClick={startEdit} className="h-8 px-3 border border-primary text-primary rounded-lg text-sm font-medium hover:bg-primary/5 transition-colors flex items-center gap-1.5">
+                  <Pencil className="w-3.5 h-3.5" />
+                  Editar
+                </button>
+              )}
+              <button onClick={onClose} className="p-1.5 hover:bg-secondary rounded-lg transition-colors">
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
           </div>
 
-          {/* Info Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <InfoBox label="Etapa">
-              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.bg} ${badge.text}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
-                {client.dealStage}
-              </span>
-            </InfoBox>
-            <InfoBox label="Valor"><span className="text-sm font-semibold text-primary">{client.dealValue || "—"}</span></InfoBox>
-            <InfoBox label="Contato"><span className="text-sm text-foreground">{client.contactName || "—"}</span></InfoBox>
-            <InfoBox label="Última Reunião">
-              <span className="text-sm text-foreground">{client.meetingDate ? new Date(client.meetingDate).toLocaleDateString("pt-BR") : "—"}</span>
-            </InfoBox>
-          </div>
-
-          {/* Contact Details */}
-          {(client.contactRole || client.contactEmail || client.contactPhone || client.companyGroup) && (
-            <div className="mb-5 space-y-1.5">
-              <h4 className="text-xs font-medium text-muted-foreground mb-2">Contato</h4>
-              {client.contactRole && <DetailRow icon={User} text={client.contactRole} />}
-              {client.contactEmail && <DetailRow icon={Mail} text={client.contactEmail} />}
-              {client.contactPhone && <DetailRow icon={Phone} text={client.contactPhone} />}
-              {client.companyGroup && <DetailRow icon={Building2} text={client.companyGroup} />}
-            </div>
-          )}
-
-          {/* Executive Summary */}
-          {client.executiveSummary && (
-            <div className="mb-5">
-              <h4 className="text-xs font-medium text-muted-foreground mb-2">Resumo Executivo</h4>
-              <p className="text-sm text-foreground bg-secondary rounded-lg p-3">{client.executiveSummary}</p>
-            </div>
-          )}
-
-          <Section icon={AlertTriangle} title="Dores & Desafios" items={client.painPointsAndChallenges} />
-          <Section icon={Target} title="Objetivos & Expectativas" items={client.goalsAndExpectations} />
-          <Section icon={Zap} title="Diferenciais do Cliente" items={client.clientDifferentials} />
-
-          {/* Financial */}
-          {(client.revenueModel || client.clientTimeline || client.budgetMentioned) && (
-            <div className="mb-5 space-y-1.5">
-              <h4 className="text-xs font-medium text-muted-foreground mb-2">Financeiro & Negócio</h4>
-              {client.revenueModel && <DetailRow icon={DollarSign} text={`Modelo: ${client.revenueModel}`} />}
-              {client.clientTimeline && <DetailRow icon={Clock} text={`Prazo: ${client.clientTimeline}`} />}
-              {client.budgetMentioned && <DetailRow icon={DollarSign} text={`Orçamento: ${client.budgetMentioned}`} />}
-            </div>
-          )}
-
-          {/* Tech */}
-          {client.techStack && (
-            <div className="mb-5">
-              <div className="flex items-center gap-2 mb-2">
-                <Cpu className="w-3.5 h-3.5 text-muted-foreground" />
-                <h4 className="text-xs font-medium text-muted-foreground">Stack Técnica</h4>
+          <div className="flex gap-6">
+            {/* Main content */}
+            <div className="flex-1 space-y-6">
+              {/* Identificação */}
+              <SectionHeader label="Identificação" />
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                <ReadOrEdit editing={editing} label="Nome do Cliente" value={d.clientName} onChange={(v) => set("clientName", v)} />
+                <ReadOrEdit editing={editing} label="Projeto / Nome Interno" value={d.projectName} onChange={(v) => set("projectName", v || null)} />
+                <ReadOrEdit editing={editing} label="Data da Reunião" value={d.meetingDate} onChange={(v) => set("meetingDate", v || null)} type="date" />
+                <ReadOrEdit editing={editing} label="Modelo de Negócio" value={d.businessModel} onChange={(v) => set("businessModel", v || null)} />
               </div>
-              <p className="text-sm text-foreground bg-secondary rounded-lg p-3">{client.techStack}</p>
-            </div>
-          )}
 
-          <Section icon={Calendar} title="Próximos Passos" items={client.nextSteps} />
+              {/* Contato Principal */}
+              <SectionHeader label="Contato Principal" />
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                <ReadOrEdit editing={editing} label="Nome do Contato" value={d.contactName} onChange={(v) => set("contactName", v || null)} />
+                <ReadOrEdit editing={editing} label="Cargo / Função" value={d.contactRole} onChange={(v) => set("contactRole", v || null)} />
+                <ReadOrEdit editing={editing} label="Email" value={d.contactEmail} onChange={(v) => set("contactEmail", v || null)} type="email" />
+                <ReadOrEdit editing={editing} label="Telefone" value={d.contactPhone} onChange={(v) => set("contactPhone", v || null)} />
+                <ReadOrEdit editing={editing} label="Empresa / Grupo Econômico" value={d.companyGroup} onChange={(v) => set("companyGroup", v || null)} className="col-span-2" />
+              </div>
 
-          {client.responsibleParties && (
-            <div className="mb-5">
-              <h4 className="text-xs font-medium text-muted-foreground mb-2">Responsáveis</h4>
-              <p className="text-sm text-foreground bg-secondary rounded-lg p-3">{client.responsibleParties}</p>
-            </div>
-          )}
+              {/* Análise Comercial */}
+              <SectionHeader label="Análise Comercial" />
+              <ReadOrEditTextarea editing={editing} label="Resumo Executivo" value={d.executiveSummary} onChange={(v) => set("executiveSummary", v || null)} />
+              <ReadOrEditList editing={editing} label="Dores & Desafios" items={d.painPointsAndChallenges} onChange={(v) => set("painPointsAndChallenges", v)} />
+              <ReadOrEditList editing={editing} label="Objetivos & Expectativas" items={d.goalsAndExpectations} onChange={(v) => set("goalsAndExpectations", v)} />
+              <ReadOrEditList editing={editing} label="Diferenciais do Cliente" items={d.clientDifferentials} onChange={(v) => set("clientDifferentials", v)} />
 
-          {/* Sidebar Metrics */}
-          <div className="grid grid-cols-3 gap-2 mb-5">
-            {client.confidenceLevel != null && <MetricPill label="Confiança" value={`${client.confidenceLevel}%`} />}
-            {client.urgency && <MetricPill label="Urgência" value={client.urgency} />}
-            {client.risk && <MetricPill label="Risco" value={client.risk} />}
-            {client.expansionPotential && <MetricPill label="Expansão" value={client.expansionPotential} />}
-            {client.priceSensitivity && <MetricPill label="Sens. Preço" value={client.priceSensitivity} />}
-            {client.implementationComplexity && <MetricPill label="Complexidade" value={client.implementationComplexity} />}
-          </div>
+              {/* Financeiro & Negócio */}
+              <SectionHeader label="Financeiro & Negócio" />
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                <ReadOrEdit editing={editing} label="Valor do Deal / Proposta" value={d.dealValue} onChange={(v) => set("dealValue", v || null)} />
+                <ReadOrEdit editing={editing} label="Modelo de Receita" value={d.revenueModel} onChange={(v) => set("revenueModel", v || null)} />
+                <ReadOrEdit editing={editing} label="Prazo / Urgência do Cliente" value={d.clientTimeline} onChange={(v) => set("clientTimeline", v || null)} />
+                <ReadOrEdit editing={editing} label="Orçamento Mencionado" value={d.budgetMentioned} onChange={(v) => set("budgetMentioned", v || null)} />
+              </div>
 
-          {/* Meetings Timeline */}
-          <div className="mb-5">
-            <h4 className="text-xs font-medium text-muted-foreground mb-2">Timeline de Reuniões</h4>
-            <div className="space-y-2">
-              {client.meetings.map((m) => (
-                <div key={m.id} className="bg-secondary rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground">{new Date(m.date).toLocaleDateString("pt-BR")}</p>
-                  <p className="text-sm text-foreground mt-1">{m.summary}</p>
+              {/* Contexto Técnico */}
+              <SectionHeader label="Contexto Técnico" />
+              <ReadOrEditTextarea editing={editing} label="Stack / Integrações Relevantes" value={d.techStack} onChange={(v) => set("techStack", v || null)} />
+              <ReadOrEditSelect editing={editing} label="Complexidade de Implementação" value={d.implementationComplexity} onChange={(v) => set("implementationComplexity", v || null)} options={["Baixa", "Média", "Alta"]} />
+
+              {/* Plano de Ação */}
+              <SectionHeader label="Plano de Ação" />
+              <ReadOrEditList editing={editing} label="Próximos Passos" items={d.nextSteps} onChange={(v) => set("nextSteps", v)} />
+              <ReadOrEditTextarea editing={editing} label="Responsáveis" value={d.responsibleParties} onChange={(v) => set("responsibleParties", v || null)} />
+              <ReadOrEdit editing={editing} label="Data do Próximo Contato" value={d.nextContactDate} onChange={(v) => set("nextContactDate", v || null)} type="date" />
+
+              {/* Timeline de Reuniões */}
+              <SectionHeader label="Timeline de Reuniões" />
+              {d.meetings.length > 0 ? (
+                <div className="space-y-2">
+                  {d.meetings.map((m) => (
+                    <div key={m.id} className="bg-secondary rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground">{new Date(m.date).toLocaleDateString("pt-BR")}</p>
+                      <p className="text-sm text-foreground mt-1">{m.summary}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <p className="text-sm text-muted-foreground">—</p>
+              )}
+
+              {/* Notas */}
+              <SectionHeader label="Notas" />
+              <textarea
+                value={d.notes}
+                onChange={(e) => editing ? set("notes", e.target.value) : onUpdate({ ...client, notes: e.target.value })}
+                placeholder="Adicione suas notas aqui..."
+                className="w-full h-24 bg-card border border-border rounded-lg p-3 text-sm placeholder:text-muted-foreground resize-none focus:outline-none focus:border-primary focus:shadow-input-focus transition-all"
+              />
+
+              <button className="w-full h-9 flex items-center justify-center gap-2 bg-secondary rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
+                <RotateCcw className="w-3.5 h-3.5" />
+                Re-analisar transcrição
+              </button>
+            </div>
+
+            {/* Sidebar - Inteligência Comercial */}
+            <div className="w-52 flex-shrink-0 space-y-4">
+              <SectionHeader label="Inteligência Comercial" />
+              {editing ? (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">Estágio Atual</label>
+                    <select value={d.dealStage} onChange={(e) => set("dealStage", e.target.value as DealStage)} className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary transition-all">
+                      {DEAL_STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">Nível de Confiança (%)</label>
+                    <input type="number" min={0} max={100} value={d.confidenceLevel ?? ""} onChange={(e) => set("confidenceLevel", e.target.value ? Number(e.target.value) : null)} className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary transition-all" />
+                  </div>
+                  <ReadOrEditSelect editing label="Urgência" value={d.urgency} onChange={(v) => set("urgency", v || null)} options={["Baixa", "Média", "Alta"]} />
+                  <ReadOrEditSelect editing label="Risco" value={d.risk} onChange={(v) => set("risk", v || null)} options={["Baixa", "Média", "Alta"]} />
+                  <ReadOrEditSelect editing label="Potencial de Expansão" value={d.expansionPotential} onChange={(v) => set("expansionPotential", v || null)} options={["Baixo", "Médio", "Alto"]} />
+                  <ReadOrEditSelect editing label="Sensibilidade a Preço" value={d.priceSensitivity} onChange={(v) => set("priceSensitivity", v || null)} options={["Baixa", "Média", "Alta"]} />
+                </>
+              ) : (
+                <>
+                  <SidebarItem label="Estágio Atual">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.bg} ${badge.text}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+                      {d.dealStage}
+                    </span>
+                  </SidebarItem>
+                  <SidebarItem label="Nível de Confiança"><span className="text-sm font-semibold text-foreground">{d.confidenceLevel != null ? `${d.confidenceLevel}%` : "—"}</span></SidebarItem>
+                  <SidebarItem label="Urgência"><span className="text-sm text-foreground">{d.urgency || "—"}</span></SidebarItem>
+                  <SidebarItem label="Risco"><span className="text-sm text-foreground">{d.risk || "—"}</span></SidebarItem>
+                  <SidebarItem label="Potencial de Expansão"><span className="text-sm text-foreground">{d.expansionPotential || "—"}</span></SidebarItem>
+                  <SidebarItem label="Sensibilidade a Preço"><span className="text-sm text-foreground">{d.priceSensitivity || "—"}</span></SidebarItem>
+                </>
+              )}
             </div>
           </div>
-
-          {/* Notes */}
-          <div className="mb-5">
-            <h4 className="text-xs font-medium text-muted-foreground mb-2">Notas</h4>
-            <textarea
-              value={client.notes}
-              onChange={(e) => onUpdate({ ...client, notes: e.target.value })}
-              placeholder="Adicione suas notas aqui..."
-              className="w-full h-24 bg-card border border-border rounded-lg p-3 text-sm placeholder:text-muted-foreground resize-none focus:outline-none focus:border-primary focus:shadow-input-focus transition-all"
-            />
-          </div>
-
-          <button className="w-full h-9 flex items-center justify-center gap-2 bg-secondary rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <RotateCcw className="w-3.5 h-3.5" />
-            Re-analisar transcrição
-          </button>
         </div>
       </div>
     </>
   );
 };
 
-const InfoBox = ({ label, children }: { label: string; children: React.ReactNode }) => (
+/* --- Sub-components --- */
+
+const SectionHeader = ({ label }: { label: string }) => (
+  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border pb-2">{label}</h3>
+);
+
+const SidebarItem = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="bg-secondary rounded-lg p-3">
-    <p className="text-xs text-muted-foreground mb-1">{label}</p>
+    <p className="text-[10px] font-medium text-muted-foreground mb-1">{label}</p>
     {children}
   </div>
 );
 
-const Section = ({ icon: Icon, title, items }: { icon: React.ElementType; title: string; items: string[] }) => {
-  if (!items || items.length === 0) return null;
-  return (
-    <div className="mb-5">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-        <h4 className="text-xs font-medium text-muted-foreground">{title}</h4>
-      </div>
-      <ul className="space-y-1.5">
+const ReadOrEdit = ({ editing, label, value, onChange, type = "text", className }: {
+  editing: boolean; label: string; value: string | null | undefined; onChange: (v: string) => void; type?: string; className?: string;
+}) => (
+  <div className={className}>
+    <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
+    {editing ? (
+      <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary focus:shadow-input-focus transition-all" />
+    ) : (
+      <p className="text-sm text-foreground">{type === "date" && value ? new Date(value).toLocaleDateString("pt-BR") : (value || "—")}</p>
+    )}
+  </div>
+);
+
+const ReadOrEditTextarea = ({ editing, label, value, onChange }: {
+  editing: boolean; label: string; value: string | null | undefined; onChange: (v: string) => void;
+}) => (
+  <div>
+    <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
+    {editing ? (
+      <textarea value={value || ""} onChange={(e) => onChange(e.target.value)} rows={3} className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm resize-none focus:outline-none focus:border-primary focus:shadow-input-focus transition-all" />
+    ) : (
+      <p className="text-sm text-foreground whitespace-pre-wrap">{value || "—"}</p>
+    )}
+  </div>
+);
+
+const ReadOrEditList = ({ editing, label, items, onChange }: {
+  editing: boolean; label: string; items: string[] | undefined; onChange: (v: string[]) => void;
+}) => (
+  <div>
+    <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
+    {editing ? (
+      <textarea value={(items || []).join("\n")} onChange={(e) => onChange(e.target.value.split("\n").filter(Boolean))} rows={4} placeholder="Um por linha" className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm resize-none focus:outline-none focus:border-primary focus:shadow-input-focus transition-all" />
+    ) : (items && items.length > 0) ? (
+      <ul className="space-y-1">
         {items.map((item, i) => (
           <li key={i} className="text-sm text-foreground flex gap-2">
             <span className="text-primary mt-1.5 text-[6px]">●</span>
@@ -163,21 +245,25 @@ const Section = ({ icon: Icon, title, items }: { icon: React.ElementType; title:
           </li>
         ))}
       </ul>
-    </div>
-  );
-};
-
-const DetailRow = ({ icon: Icon, text }: { icon: React.ElementType; text: string }) => (
-  <div className="flex items-center gap-2 text-sm text-foreground">
-    <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-    {text}
+    ) : (
+      <p className="text-sm text-foreground">—</p>
+    )}
   </div>
 );
 
-const MetricPill = ({ label, value }: { label: string; value: string }) => (
-  <div className="bg-secondary rounded-lg p-2 text-center">
-    <p className="text-[10px] text-muted-foreground">{label}</p>
-    <p className="text-xs font-semibold text-foreground">{value}</p>
+const ReadOrEditSelect = ({ editing, label, value, onChange, options }: {
+  editing: boolean; label: string; value: string | null | undefined; onChange: (v: string) => void; options: string[];
+}) => (
+  <div>
+    <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
+    {editing ? (
+      <select value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary transition-all">
+        <option value="">—</option>
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+      </select>
+    ) : (
+      <p className="text-sm text-foreground">{value || "—"}</p>
+    )}
   </div>
 );
 

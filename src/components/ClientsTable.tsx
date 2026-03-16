@@ -1,16 +1,18 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Client, DEAL_STAGES, DealStage, STAGE_BADGE_STYLES } from "@/types/crm";
-import { Search, ChevronDown, ChevronUp, Filter } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Filter, MoreVertical, Pencil, Trash2 } from "lucide-react";
 
 interface ClientsTableProps {
   clients: Client[];
   onClientClick: (client: Client) => void;
+  onEdit: (client: Client) => void;
+  onDelete: (client: Client) => void;
 }
 
 type SortField = "clientName" | "dealStage" | "meetingDate" | "dealValue";
 type SortDir = "asc" | "desc";
 
-const ClientsTable = ({ clients, onClientClick }: ClientsTableProps) => {
+const ClientsTable = ({ clients, onClientClick, onEdit, onDelete }: ClientsTableProps) => {
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<DealStage | "all">("all");
   const [sortField, setSortField] = useState<SortField>("clientName");
@@ -81,6 +83,7 @@ const ClientsTable = ({ clients, onClientClick }: ClientsTableProps) => {
                   ["meetingDate", "Última Reunião"],
                   ["dealValue", "Valor"],
                   [null, "Responsável"],
+                  [null, ""],
                 ] as const).map(([field, label], i) => (
                   <th
                     key={i}
@@ -94,40 +97,73 @@ const ClientsTable = ({ clients, onClientClick }: ClientsTableProps) => {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-12 text-muted-foreground text-sm">Nenhum cliente encontrado.</td></tr>
+                <tr><td colSpan={8} className="text-center py-12 text-muted-foreground text-sm">Nenhum cliente encontrado.</td></tr>
               ) : (
-                filtered.map((client) => {
-                  const badge = STAGE_BADGE_STYLES[client.dealStage];
-                  return (
-                    <tr
-                      key={client.id}
-                      onClick={() => onClientClick(client)}
-                      className="border-b border-border last:border-b-0 cursor-pointer hover:bg-secondary/50 transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-foreground">{client.clientName}</p>
-                        {client.projectName && <p className="text-xs text-muted-foreground">{client.projectName}</p>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.bg} ${badge.text}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
-                          {client.dealStage}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 max-w-[200px]"><p className="text-xs text-muted-foreground truncate">{client.painPointsAndChallenges?.[0] || "—"}</p></td>
-                      <td className="px-4 py-3 max-w-[200px]"><p className="text-xs text-muted-foreground truncate">{client.nextSteps?.[0] || "—"}</p></td>
-                      <td className="px-4 py-3"><span className="text-xs text-muted-foreground">{client.meetingDate ? new Date(client.meetingDate).toLocaleDateString("pt-BR") : "—"}</span></td>
-                      <td className="px-4 py-3"><span className="text-sm font-semibold text-primary">{client.dealValue || "—"}</span></td>
-                      <td className="px-4 py-3"><span className="text-xs text-muted-foreground">{client.assignedTo}</span></td>
-                    </tr>
-                  );
-                })
+                filtered.map((client) => (
+                  <TableRow key={client.id} client={client} onClick={() => onClientClick(client)} onEdit={() => onEdit(client)} onDelete={() => onDelete(client)} />
+                ))
               )}
             </tbody>
           </table>
         </div>
       </div>
     </div>
+  );
+};
+
+const TableRow = ({ client, onClick, onEdit, onDelete }: { client: Client; onClick: () => void; onEdit: () => void; onDelete: () => void }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const badge = STAGE_BADGE_STYLES[client.dealStage];
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
+  return (
+    <tr onClick={onClick} className="border-b border-border last:border-b-0 cursor-pointer hover:bg-secondary/50 transition-colors group">
+      <td className="px-4 py-3">
+        <p className="font-medium text-foreground">{client.clientName}</p>
+        {client.projectName && <p className="text-xs text-muted-foreground">{client.projectName}</p>}
+      </td>
+      <td className="px-4 py-3">
+        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.bg} ${badge.text}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+          {client.dealStage}
+        </span>
+      </td>
+      <td className="px-4 py-3 max-w-[200px]"><p className="text-xs text-muted-foreground truncate">{client.painPointsAndChallenges?.[0] || "—"}</p></td>
+      <td className="px-4 py-3 max-w-[200px]"><p className="text-xs text-muted-foreground truncate">{client.nextSteps?.[0] || "—"}</p></td>
+      <td className="px-4 py-3"><span className="text-xs text-muted-foreground">{client.meetingDate ? new Date(client.meetingDate).toLocaleDateString("pt-BR") : "—"}</span></td>
+      <td className="px-4 py-3"><span className="text-sm font-semibold text-primary">{client.dealValue || "—"}</span></td>
+      <td className="px-4 py-3"><span className="text-xs text-muted-foreground">{client.assignedTo}</span></td>
+      <td className="px-4 py-3 w-10">
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
+            className="p-1 rounded hover:bg-secondary opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <MoreVertical className="w-4 h-4 text-muted-foreground" />
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1 w-44 bg-card rounded-lg shadow-modal border border-border py-1 z-30">
+              <button onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors">
+                <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                Editar
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                <Trash2 className="w-3.5 h-3.5" />
+                Excluir cliente
+              </button>
+            </div>
+          )}
+        </div>
+      </td>
+    </tr>
   );
 };
 

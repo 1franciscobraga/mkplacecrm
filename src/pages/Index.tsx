@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Client, DealStage } from "@/types/crm";
-import { getClients, addClient, updateClient, updateClientStage } from "@/store/clientStore";
+import { getClients, addClient, updateClient, updateClientStage, deleteClient } from "@/store/clientStore";
 import Navbar from "@/components/Navbar";
 import StatsBar from "@/components/StatsBar";
 import PipelineBoard from "@/components/PipelineBoard";
@@ -17,6 +17,7 @@ const Index = () => {
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,6 +42,26 @@ const Index = () => {
   const handleNewClient = (client: Client) => {
     const updated = addClient(client);
     setClients(updated);
+  };
+
+  const handleUpdateClient = (client: Client) => {
+    const updated = updateClient(client);
+    setClients(updated);
+    setSelectedClient(client);
+  };
+
+  const handleEditClient = (client: Client) => {
+    setSelectedClient(client);
+    // The drawer's edit mode will be triggered via the edit button inside
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteTarget) {
+      const updated = deleteClient(deleteTarget.id);
+      setClients(updated);
+      if (selectedClient?.id === deleteTarget.id) setSelectedClient(null);
+      setDeleteTarget(null);
+    }
   };
 
   return (
@@ -85,14 +106,35 @@ const Index = () => {
       </div>
 
       {activeTab === "pipeline" ? (
-        <PipelineBoard clients={clients} onStageChange={handleStageChange} onClientClick={setSelectedClient} />
+        <PipelineBoard clients={clients} onStageChange={handleStageChange} onClientClick={setSelectedClient} onEdit={handleEditClient} onDelete={setDeleteTarget} />
       ) : (
-        <ClientsTable clients={clients} onClientClick={setSelectedClient} />
+        <ClientsTable clients={clients} onClientClick={setSelectedClient} onEdit={handleEditClient} onDelete={setDeleteTarget} />
       )}
 
-      <ClientDrawer client={selectedClient} onClose={() => setSelectedClient(null)} onUpdate={(c) => { setClients(updateClient(c)); setSelectedClient(c); }} />
+      <ClientDrawer client={selectedClient} onClose={() => setSelectedClient(null)} onUpdate={handleUpdateClient} />
       <TranscriptModal open={transcriptOpen} onClose={() => setTranscriptOpen(false)} onSave={handleNewClient} />
       <ManualClientModal open={manualOpen} onClose={() => setManualOpen(false)} onSave={handleNewClient} />
+
+      {/* Delete Confirmation Dialog */}
+      {deleteTarget && (
+        <>
+          <div className="fixed inset-0 bg-foreground/20 backdrop-blur-[2px] z-[60]" onClick={() => setDeleteTarget(null)} />
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-card rounded-xl shadow-modal z-[60] p-6">
+            <h3 className="font-semibold text-base text-foreground mb-2">Excluir cliente</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Tem certeza que deseja excluir <strong className="text-foreground">{deleteTarget.clientName}</strong>? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setDeleteTarget(null)} className="h-9 px-4 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+                Cancelar
+              </button>
+              <button onClick={handleDeleteConfirm} className="h-9 px-5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                Excluir
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
