@@ -59,6 +59,7 @@ export interface Client {
   // System
   assignedTo: string;
   createdAt: string;
+  updatedAt: string;
   meetings: Meeting[];
   notes: string;
 }
