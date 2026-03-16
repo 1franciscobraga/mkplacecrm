@@ -47,7 +47,7 @@ const Index = () => {
   const handleUpdateClient = (client: Client) => {
     const updated = updateClient(client);
     setClients(updated);
-    setSelectedClient(client);
+    setSelectedClient(updated.find((item) => item.id === client.id) ?? null);
   };
 
   const handleEditClient = (client: Client) => {

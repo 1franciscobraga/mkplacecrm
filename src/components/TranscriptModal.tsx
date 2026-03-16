@@ -4,6 +4,7 @@ import { ExtractedData } from "@/types/crm";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/types/crm";
 import ManualClientModal from "./ManualClientModal";
+import { normalizeExtractedData } from "@/lib/clientData";
 
 interface TranscriptModalProps {
   open: boolean;
@@ -27,7 +28,7 @@ const TranscriptModal = ({ open, onClose, onSave }: TranscriptModalProps) => {
         body: { transcript },
       });
       if (fnError) throw fnError;
-      setExtracted(data as ExtractedData);
+      setExtracted(normalizeExtractedData((data ?? {}) as Partial<ExtractedData>));
     } catch (e: any) {
       console.error("Extraction error:", e);
       setError(e?.message || "Erro ao extrair dados. Tente novamente.");
@@ -46,7 +47,6 @@ const TranscriptModal = ({ open, onClose, onSave }: TranscriptModalProps) => {
 
   if (!open) return null;
 
-  // If we have extracted data, show the manual form with prefilled data
   if (extracted) {
     return (
       <ManualClientModal
@@ -85,9 +85,7 @@ const TranscriptModal = ({ open, onClose, onSave }: TranscriptModalProps) => {
             disabled={loading}
           />
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <button
             onClick={handleExtract}
