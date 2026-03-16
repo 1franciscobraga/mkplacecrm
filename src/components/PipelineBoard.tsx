@@ -7,9 +7,11 @@ interface PipelineBoardProps {
   clients: Client[];
   onStageChange: (clientId: string, newStage: DealStage) => void;
   onClientClick: (client: Client) => void;
+  onEdit: (client: Client) => void;
+  onDelete: (client: Client) => void;
 }
 
-const PipelineBoard = ({ clients, onStageChange, onClientClick }: PipelineBoardProps) => {
+const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete }: PipelineBoardProps) => {
   const [draggedClientId, setDraggedClientId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<DealStage | null>(null);
 
@@ -72,6 +74,8 @@ const PipelineBoard = ({ clients, onStageChange, onClientClick }: PipelineBoardP
                     client={client}
                     onClick={() => onClientClick(client)}
                     onDragStart={() => setDraggedClientId(client.id)}
+                    onEdit={() => onEdit(client)}
+                    onDelete={() => onDelete(client)}
                   />
                 ))
               )}

@@ -98,3 +98,9 @@ export function updateClientStage(clientId: string, stage: DealStage): Client[] 
   saveClients(clients);
   return clients;
 }
+
+export function deleteClient(clientId: string): Client[] {
+  const clients = getClients().filter((c) => c.id !== clientId);
+  saveClients(clients);
+  return clients;
+}
