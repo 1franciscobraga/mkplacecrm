@@ -11,20 +11,40 @@ const SYSTEM_PROMPT = `You are a data extraction assistant for a B2B sales CRM. 
 {
   "clientName": "string - company name",
   "projectName": "string or null - internal nickname if mentioned",
-  "contactPerson": "string or null - main contact name",
   "meetingDate": "string or null - date of meeting in YYYY-MM-DD format if mentioned",
-  "dealStage": "string - one of: Prospecção | Qualificação | Proposta Enviada | Negociação | Fechado - Ganho | Fechado - Perdido",
+  "businessModel": "string or null - business model inferred from context, e.g. 'Marketplace White Label B2B', 'Fintech PDV', 'SaaS B2B'",
+  "contactName": "string or null - main contact person name",
+  "contactRole": "string or null - role/title if mentioned, e.g. 'CEO', 'CTO', 'Head de Produto'",
+  "contactEmail": null,
+  "contactPhone": null,
+  "companyGroup": "string or null - holding or parent company if mentioned",
+  "executiveSummary": "string or null - 2-3 sentence executive summary of the meeting",
+  "painPointsAndChallenges": ["array of strings - main problems and challenges the client has"],
+  "goalsAndExpectations": ["array of strings - what the client wants to achieve and their expectations"],
+  "clientDifferentials": ["array of strings - competitive advantages or strengths the client mentioned about themselves"],
   "dealValue": "string or null - estimated contract value or GMV if mentioned",
-  "painPoints": ["array of strings - main problems the client has"],
-  "goals": ["array of strings - what the client wants to achieve"],
-  "expectations": ["array of strings - specific expectations mentioned"],
-  "nextActions": ["array of strings - agreed next steps"],
-  "differentials": ["array of strings - client competitive advantages mentioned"],
-  "technicalNotes": "string or null - any technical details, APIs, integrations mentioned",
-  "otherRelevantInfo": "string or null - anything else important"
+  "revenueModel": "string or null - revenue/pricing model discussed, e.g. 'Setup R$75k + 2.5% GMV', 'Mensalidade + variável'",
+  "clientTimeline": "string or null - timeline or urgency mentioned, e.g. 'MVP em 60 dias', 'Q2 2026'",
+  "budgetMentioned": "string or null - any budget constraints or approvals mentioned",
+  "techStack": "string or null - APIs, systems, platforms, integrations mentioned (e.g. 'JWT, APIs REST, integração iFood')",
+  "implementationComplexity": "string or null - one of: Baixa | Média | Alta - infer from technical requirements discussed",
+  "nextSteps": ["array of strings - agreed next steps and action items"],
+  "responsibleParties": "string or null - who owns each action, which side is responsible",
+  "nextContactDate": "string or null - follow-up date or deadline in YYYY-MM-DD if mentioned",
+  "suggestedStage": "string - one of: Prospecção | Qualificação | Proposta Enviada | Negociação | Fechado - Ganho | Fechado - Perdido",
+  "confidenceLevel": "number or null - 0-100 confidence percentage of deal closing based on signals",
+  "urgency": "string or null - one of: Baixa | Média | Alta - inferred from timeline and client tone",
+  "risk": "string or null - one of: Baixa | Média | Alta - inferred from blockers and concerns",
+  "expansionPotential": "string or null - one of: Baixo | Médio | Alto - inferred from client size and future plans",
+  "priceSensitivity": "string or null - one of: Baixa | Média | Alta - inferred from negotiation signals and budget discussion"
 }
 
-If a field is not mentioned, use null or empty array. Infer the deal stage from context clues about where the relationship is in the sales process. Always return valid JSON only.`;
+Rules:
+- contactEmail and contactPhone should ALWAYS be null (filled manually by user after meeting)
+- If a field is not mentioned, use null or empty array
+- Infer the deal stage from context clues about where the relationship is in the sales process
+- For confidenceLevel, estimate based on buyer signals, engagement level, and deal maturity
+- Always return valid JSON only`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -85,7 +105,6 @@ serve(async (req) => {
       throw new Error("No content in AI response");
     }
 
-    // Parse JSON from response, handling possible markdown code blocks
     let jsonStr = content.trim();
     if (jsonStr.startsWith("```")) {
       jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
@@ -93,7 +112,14 @@ serve(async (req) => {
 
     const parsed = JSON.parse(jsonStr);
 
-    return new Response(JSON.stringify(parsed), {
+    // Map suggestedStage to dealStage for frontend compatibility
+    const result = {
+      ...parsed,
+      dealStage: parsed.suggestedStage || parsed.dealStage || "Prospecção",
+    };
+    delete result.suggestedStage;
+
+    return new Response(JSON.stringify(result), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

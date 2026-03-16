@@ -32,7 +32,7 @@ const ClientsTable = ({ clients, onClientClick }: ClientsTableProps) => {
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(
-        (c) => c.clientName.toLowerCase().includes(q) || c.projectName?.toLowerCase().includes(q) || c.contactPerson?.toLowerCase().includes(q)
+        (c) => c.clientName.toLowerCase().includes(q) || c.projectName?.toLowerCase().includes(q) || c.contactName?.toLowerCase().includes(q)
       );
     }
     result.sort((a, b) => {
@@ -77,7 +77,7 @@ const ClientsTable = ({ clients, onClientClick }: ClientsTableProps) => {
                   ["clientName", "Cliente"],
                   ["dealStage", "Etapa"],
                   [null, "Dores"],
-                  [null, "Próx. Ação"],
+                  [null, "Próx. Passo"],
                   ["meetingDate", "Última Reunião"],
                   ["dealValue", "Valor"],
                   [null, "Responsável"],
@@ -114,8 +114,8 @@ const ClientsTable = ({ clients, onClientClick }: ClientsTableProps) => {
                           {client.dealStage}
                         </span>
                       </td>
-                      <td className="px-4 py-3 max-w-[200px]"><p className="text-xs text-muted-foreground truncate">{client.painPoints[0] || "—"}</p></td>
-                      <td className="px-4 py-3 max-w-[200px]"><p className="text-xs text-muted-foreground truncate">{client.nextActions[0] || "—"}</p></td>
+                      <td className="px-4 py-3 max-w-[200px]"><p className="text-xs text-muted-foreground truncate">{client.painPointsAndChallenges?.[0] || "—"}</p></td>
+                      <td className="px-4 py-3 max-w-[200px]"><p className="text-xs text-muted-foreground truncate">{client.nextSteps?.[0] || "—"}</p></td>
                       <td className="px-4 py-3"><span className="text-xs text-muted-foreground">{client.meetingDate ? new Date(client.meetingDate).toLocaleDateString("pt-BR") : "—"}</span></td>
                       <td className="px-4 py-3"><span className="text-sm font-semibold text-primary">{client.dealValue || "—"}</span></td>
                       <td className="px-4 py-3"><span className="text-xs text-muted-foreground">{client.assignedTo}</span></td>
