@@ -102,7 +102,8 @@ export async function addClient(client: Client): Promise<void> {
   });
   console.log("Saving client object:", JSON.stringify(normalized, null, 2));
 
-  const { error } = await supabase.from("clients").insert(clientToRow(normalized));
+  const row = clientToRow(normalized);
+  const { error } = await supabase.from("clients").insert(row as any);
   if (error) console.error("Error adding client:", error);
 }
 
