@@ -14,7 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          assigned_to: string
+          budget_mentioned: string | null
+          business_model: string | null
+          client_differentials: Json
+          client_name: string
+          client_timeline: string | null
+          company_group: string | null
+          confidence_level: number | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          contact_role: string | null
+          created_at: string
+          deal_stage: string
+          deal_value: string | null
+          executive_summary: string | null
+          expansion_potential: string | null
+          goals_and_expectations: Json
+          id: string
+          implementation_complexity: string | null
+          meeting_date: string | null
+          meetings: Json
+          next_contact_date: string | null
+          next_steps: Json
+          notes: string
+          pain_points_and_challenges: Json
+          price_sensitivity: string | null
+          project_name: string | null
+          responsible_parties: string | null
+          revenue_model: string | null
+          risk: string | null
+          tech_stack: string | null
+          updated_at: string
+          urgency: string | null
+        }
+        Insert: {
+          assigned_to?: string
+          budget_mentioned?: string | null
+          business_model?: string | null
+          client_differentials?: Json
+          client_name: string
+          client_timeline?: string | null
+          company_group?: string | null
+          confidence_level?: number | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_role?: string | null
+          created_at?: string
+          deal_stage?: string
+          deal_value?: string | null
+          executive_summary?: string | null
+          expansion_potential?: string | null
+          goals_and_expectations?: Json
+          id: string
+          implementation_complexity?: string | null
+          meeting_date?: string | null
+          meetings?: Json
+          next_contact_date?: string | null
+          next_steps?: Json
+          notes?: string
+          pain_points_and_challenges?: Json
+          price_sensitivity?: string | null
+          project_name?: string | null
+          responsible_parties?: string | null
+          revenue_model?: string | null
+          risk?: string | null
+          tech_stack?: string | null
+          updated_at?: string
+          urgency?: string | null
+        }
+        Update: {
+          assigned_to?: string
+          budget_mentioned?: string | null
+          business_model?: string | null
+          client_differentials?: Json
+          client_name?: string
+          client_timeline?: string | null
+          company_group?: string | null
+          confidence_level?: number | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_role?: string | null
+          created_at?: string
+          deal_stage?: string
+          deal_value?: string | null
+          executive_summary?: string | null
+          expansion_potential?: string | null
+          goals_and_expectations?: Json
+          id?: string
+          implementation_complexity?: string | null
+          meeting_date?: string | null
+          meetings?: Json
+          next_contact_date?: string | null
+          next_steps?: Json
+          notes?: string
+          pain_points_and_challenges?: Json
+          price_sensitivity?: string | null
+          project_name?: string | null
+          responsible_parties?: string | null
+          revenue_model?: string | null
+          risk?: string | null
+          tech_stack?: string | null
+          updated_at?: string
+          urgency?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
