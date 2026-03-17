@@ -113,9 +113,10 @@ export async function updateClient(updated: Client): Promise<void> {
     updatedAt: new Date().toISOString(),
   });
 
+  const row = clientToRow(normalized);
   const { error } = await supabase
     .from("clients")
-    .update(clientToRow(normalized))
+    .update(row as any)
     .eq("id", normalized.id);
   if (error) console.error("Error updating client:", error);
 }
