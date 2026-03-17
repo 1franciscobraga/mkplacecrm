@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Client, DealStage } from "@/types/crm";
-import { getClients, addClient, updateClient, updateClientStage, deleteClient } from "@/store/clientStore";
+import { addClient, updateClient, updateClientStage, deleteClient, subscribeToClients } from "@/store/clientStore";
 import Navbar from "@/components/Navbar";
 import StatsBar from "@/components/StatsBar";
 import PipelineBoard from "@/components/PipelineBoard";
@@ -21,7 +21,14 @@ const Index = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setClients(getClients());
+    const unsubscribe = subscribeToClients((updated) => {
+      setClients(updated);
+      // Refresh selected client if it's open
+      setSelectedClient((prev) =>
+        prev ? updated.find((c) => c.id === prev.id) ?? null : null
+      );
+    });
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -34,31 +41,25 @@ const Index = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleStageChange = (clientId: string, newStage: DealStage) => {
-    const updated = updateClientStage(clientId, newStage);
-    setClients(updated);
+  const handleStageChange = async (clientId: string, newStage: DealStage) => {
+    await updateClientStage(clientId, newStage);
   };
 
-  const handleNewClient = (client: Client) => {
-    const updated = addClient(client);
-    setClients(updated);
+  const handleNewClient = async (client: Client) => {
+    await addClient(client);
   };
 
-  const handleUpdateClient = (client: Client) => {
-    const updated = updateClient(client);
-    setClients(updated);
-    setSelectedClient(updated.find((item) => item.id === client.id) ?? null);
+  const handleUpdateClient = async (client: Client) => {
+    await updateClient(client);
   };
 
   const handleEditClient = (client: Client) => {
     setSelectedClient(client);
-    // The drawer's edit mode will be triggered via the edit button inside
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (deleteTarget) {
-      const updated = deleteClient(deleteTarget.id);
-      setClients(updated);
+      await deleteClient(deleteTarget.id);
       if (selectedClient?.id === deleteTarget.id) setSelectedClient(null);
       setDeleteTarget(null);
     }

@@ -1,152 +1,158 @@
 import { Client, DealStage } from "@/types/crm";
 import { normalizeClient } from "@/lib/clientData";
+import { supabase } from "@/integrations/supabase/client";
 
-const STORAGE_KEY = "mkt-crm-clients";
+// ── Mapping helpers: DB row ↔ Client ──
 
-const SAMPLE_CLIENT: Client = normalizeClient({
-  id: "umi-001",
-  clientName: "UMI",
-  projectName: "Expansão Marketplace E-commerce",
-  meetingDate: "2026-03-11",
-  businessModel: "Marketplace White Label B2B",
-  contactName: "Equipe UMI",
-  contactRole: "CEO",
-  contactEmail: null,
-  contactPhone: null,
-  companyGroup: null,
-  executiveSummary:
-    "Reunião inicial de qualificação para expansão de marketplace e-commerce com solução white-label.",
-  painPointsAndChallenges: [
-    "Sem operação de e-commerce própria",
-    "Sem conexões com distribuidores",
-    "Sem infraestrutura logística para logística reversa",
-    "Processo de lockers é manual e não escalável",
-  ],
-  goalsAndExpectations: [
-    "Lançar MVP em 1-2 meses",
-    "Aumentar LTV dos clientes",
-    "Criar novas fontes de receita",
-    "Solução white-label de marketplace",
-    "Integração rápida com sistemas existentes",
-    "Escalabilidade da plataforma",
-  ],
-  clientDifferentials: [
-    "Rede existente de lockers",
-    "Base de usuários ativa",
-    "Marca reconhecida no segmento",
-  ],
-  dealValue: "R$ 75.000 setup + 2.5% GMV",
-  revenueModel: "Setup + percentual GMV",
-  clientTimeline: "MVP em 1-2 meses",
-  budgetMentioned: null,
-  techStack:
-    "API para integração com sistema de lockers existente. Possível uso de white-label.",
-  implementationComplexity: "Média",
-  nextSteps: [
-    "Definir escopo do piloto",
-    "Agendar reunião presencial de trabalho",
-    "Preparar proposta detalhada com CTO",
-  ],
-  responsibleParties: "Equipe interna + CTO do cliente",
-  nextContactDate: null,
-  dealStage: "Qualificação",
-  confidenceLevel: 70,
-  urgency: "Alta",
-  risk: "Média",
-  expansionPotential: "Alto",
-  priceSensitivity: "Média",
-  assignedTo: "Você",
-  createdAt: "2026-03-11T10:00:00Z",
-  updatedAt: "2026-03-11T10:00:00Z",
-  meetings: [
-    {
-      id: "m-001",
-      date: "2026-03-11",
-      summary:
-        "Reunião inicial de qualificação. Discutimos dores, objetivos e próximos passos.",
-    },
-  ],
-  notes: "",
+const rowToClient = (row: Record<string, unknown>): Client =>
+  normalizeClient({
+    id: row.id as string,
+    clientName: row.client_name as string,
+    projectName: row.project_name as string | null,
+    meetingDate: row.meeting_date as string | null,
+    businessModel: row.business_model as string | null,
+    contactName: row.contact_name as string | null,
+    contactRole: row.contact_role as string | null,
+    contactEmail: row.contact_email as string | null,
+    contactPhone: row.contact_phone as string | null,
+    companyGroup: row.company_group as string | null,
+    executiveSummary: row.executive_summary as string | null,
+    painPointsAndChallenges: (row.pain_points_and_challenges ?? []) as string[],
+    goalsAndExpectations: (row.goals_and_expectations ?? []) as string[],
+    clientDifferentials: (row.client_differentials ?? []) as string[],
+    dealValue: row.deal_value as string | null,
+    revenueModel: row.revenue_model as string | null,
+    clientTimeline: row.client_timeline as string | null,
+    budgetMentioned: row.budget_mentioned as string | null,
+    techStack: row.tech_stack as string | null,
+    implementationComplexity: row.implementation_complexity as Client["implementationComplexity"],
+    nextSteps: (row.next_steps ?? []) as string[],
+    responsibleParties: row.responsible_parties as string | null,
+    nextContactDate: row.next_contact_date as string | null,
+    dealStage: row.deal_stage as DealStage,
+    confidenceLevel: row.confidence_level as number | null,
+    urgency: row.urgency as Client["urgency"],
+    risk: row.risk as Client["risk"],
+    expansionPotential: row.expansion_potential as Client["expansionPotential"],
+    priceSensitivity: row.price_sensitivity as Client["priceSensitivity"],
+    assignedTo: row.assigned_to as string,
+    meetings: (row.meetings ?? []) as Client["meetings"],
+    notes: (row.notes ?? "") as string,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  });
+
+const clientToRow = (client: Client) => ({
+  id: client.id,
+  client_name: client.clientName,
+  project_name: client.projectName,
+  meeting_date: client.meetingDate,
+  business_model: client.businessModel,
+  contact_name: client.contactName,
+  contact_role: client.contactRole,
+  contact_email: client.contactEmail,
+  contact_phone: client.contactPhone,
+  company_group: client.companyGroup,
+  executive_summary: client.executiveSummary,
+  pain_points_and_challenges: client.painPointsAndChallenges,
+  goals_and_expectations: client.goalsAndExpectations,
+  client_differentials: client.clientDifferentials,
+  deal_value: client.dealValue,
+  revenue_model: client.revenueModel,
+  client_timeline: client.clientTimeline,
+  budget_mentioned: client.budgetMentioned,
+  tech_stack: client.techStack,
+  implementation_complexity: client.implementationComplexity,
+  next_steps: client.nextSteps,
+  responsible_parties: client.responsibleParties,
+  next_contact_date: client.nextContactDate,
+  deal_stage: client.dealStage,
+  confidence_level: client.confidenceLevel,
+  urgency: client.urgency,
+  risk: client.risk,
+  expansion_potential: client.expansionPotential,
+  price_sensitivity: client.priceSensitivity,
+  assigned_to: client.assignedTo,
+  meetings: client.meetings,
+  notes: client.notes,
+  created_at: client.createdAt,
+  updated_at: client.updatedAt,
 });
 
-const normalizeCollection = (items: unknown): Client[] => {
-  if (!Array.isArray(items)) return [];
-  return items.map((item) => normalizeClient(item as Partial<Client>));
-};
+// ── Public API ──
 
-export function getClients(): Client[] {
-  const stored = localStorage.getItem(STORAGE_KEY);
+export async function getClients(): Promise<Client[]> {
+  const { data, error } = await supabase
+    .from("clients")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-  if (!stored) {
-    const initial = [SAMPLE_CLIENT];
-    saveClients(initial);
-    return initial;
+  if (error) {
+    console.error("Error fetching clients:", error);
+    return [];
   }
 
-  try {
-    const parsed = JSON.parse(stored);
-    const normalized = normalizeCollection(parsed);
-
-    if (!normalized.length) {
-      const initial = [SAMPLE_CLIENT];
-      saveClients(initial);
-      return initial;
-    }
-
-    saveClients(normalized);
-    return normalized;
-  } catch {
-    const initial = [SAMPLE_CLIENT];
-    saveClients(initial);
-    return initial;
-  }
+  return (data ?? []).map((row) => rowToClient(row as Record<string, unknown>));
 }
 
-export function saveClients(clients: Client[]): void {
-  const normalized = clients.map((client) => normalizeClient(client));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-}
-
-export function addClient(client: Client): Client[] {
-  const clients = getClients();
-  const normalizedClient = normalizeClient({
+export async function addClient(client: Client): Promise<void> {
+  const normalized = normalizeClient({
     ...client,
     updatedAt: new Date().toISOString(),
   });
+  console.log("Saving client object:", JSON.stringify(normalized, null, 2));
 
-  console.log("Saving client object:", JSON.stringify(normalizedClient, null, 2));
-
-  clients.push(normalizedClient);
-  saveClients(clients);
-  return clients;
+  const row = clientToRow(normalized);
+  const { error } = await supabase.from("clients").insert(row as any);
+  if (error) console.error("Error adding client:", error);
 }
 
-export function updateClient(updated: Client): Client[] {
-  const normalizedUpdated = normalizeClient({
+export async function updateClient(updated: Client): Promise<void> {
+  const normalized = normalizeClient({
     ...updated,
     updatedAt: new Date().toISOString(),
   });
 
-  const clients = getClients().map((client) =>
-    client.id === normalizedUpdated.id ? normalizedUpdated : client,
-  );
-  saveClients(clients);
-  return clients;
+  const row = clientToRow(normalized);
+  const { error } = await supabase
+    .from("clients")
+    .update(row as any)
+    .eq("id", normalized.id);
+  if (error) console.error("Error updating client:", error);
 }
 
-export function updateClientStage(clientId: string, stage: DealStage): Client[] {
-  const now = new Date().toISOString();
-  const clients = getClients().map((client) =>
-    client.id === clientId
-      ? normalizeClient({ ...client, dealStage: stage, updatedAt: now })
-      : normalizeClient(client),
-  );
-  saveClients(clients);
-  return clients;
+export async function updateClientStage(clientId: string, stage: DealStage): Promise<void> {
+  const { error } = await supabase
+    .from("clients")
+    .update({ deal_stage: stage, updated_at: new Date().toISOString() })
+    .eq("id", clientId);
+  if (error) console.error("Error updating stage:", error);
 }
 
-export function deleteClient(clientId: string): Client[] {
-  const clients = getClients().filter((client) => client.id !== clientId);
-  saveClients(clients);
-  return clients;
+export async function deleteClient(clientId: string): Promise<void> {
+  const { error } = await supabase.from("clients").delete().eq("id", clientId);
+  if (error) console.error("Error deleting client:", error);
+}
+
+// ── Realtime subscription ──
+
+export function subscribeToClients(onUpdate: (clients: Client[]) => void) {
+  // Initial fetch
+  getClients().then(onUpdate);
+
+  const channel = supabase
+    .channel("clients-realtime")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "clients" },
+      () => {
+        // Re-fetch all on any change for simplicity
+        getClients().then(onUpdate);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
