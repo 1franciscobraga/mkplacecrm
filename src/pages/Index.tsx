@@ -8,11 +8,12 @@ import ClientsTable from "@/components/ClientsTable";
 import ClientDrawer from "@/components/ClientDrawer";
 import TranscriptModal from "@/components/TranscriptModal";
 import ManualClientModal from "@/components/ManualClientModal";
-import { Plus, LayoutGrid, Table, FileText, PenLine, ChevronDown } from "lucide-react";
+import FunnelView from "@/components/FunnelView";
+import { Plus, LayoutGrid, Table, FileText, PenLine, ChevronDown, TrendingDown } from "lucide-react";
 
 const Index = () => {
   const [clients, setClients] = useState<Client[]>([]);
-  const [activeTab, setActiveTab] = useState<"pipeline" | "clients">("pipeline");
+  const [activeTab, setActiveTab] = useState<"pipeline" | "clients" | "funnel">("pipeline");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
@@ -74,6 +75,7 @@ const Index = () => {
         <div className="flex items-center gap-6">
           <TabButton active={activeTab === "pipeline"} onClick={() => setActiveTab("pipeline")} icon={LayoutGrid} label="Pipeline" />
           <TabButton active={activeTab === "clients"} onClick={() => setActiveTab("clients")} icon={Table} label="Todos os Clientes" />
+          <TabButton active={activeTab === "funnel"} onClick={() => setActiveTab("funnel")} icon={TrendingDown} label="Funil de Vendas" />
         </div>
 
         <div className="relative" ref={dropdownRef}>
@@ -108,6 +110,8 @@ const Index = () => {
 
       {activeTab === "pipeline" ? (
         <PipelineBoard clients={clients} onStageChange={handleStageChange} onClientClick={setSelectedClient} onEdit={handleEditClient} onDelete={setDeleteTarget} />
+      ) : activeTab === "funnel" ? (
+        <FunnelView clients={clients} />
       ) : (
         <ClientsTable clients={clients} onClientClick={setSelectedClient} onEdit={handleEditClient} onDelete={setDeleteTarget} />
       )}

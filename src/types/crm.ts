@@ -1,19 +1,26 @@
 export type DealStage =
-  | "Prospecção"
-  | "Qualificação"
-  | "Proposta Enviada"
-  | "Negociação"
-  | "Fechado - Ganho"
-  | "Fechado - Perdido";
+  | "Lead demonstrou interesse"
+  | "Reunião Introdução"
+  | "Escopo projeto"
+  | "Proposta comercial"
+  | "Contrato"
+  | "Assinatura"
+  | "Go-Live e Implantação";
 
 export const DEAL_STAGES: DealStage[] = [
-  "Prospecção",
-  "Qualificação",
-  "Proposta Enviada",
-  "Negociação",
-  "Fechado - Ganho",
-  "Fechado - Perdido",
+  "Lead demonstrou interesse",
+  "Reunião Introdução",
+  "Escopo projeto",
+  "Proposta comercial",
+  "Contrato",
+  "Assinatura",
+  "Go-Live e Implantação",
 ];
+
+export const FINAL_STAGE: DealStage = "Go-Live e Implantação";
+
+// How many days without update before a deal is considered stale
+export const STALE_DEAL_DAYS = 14;
 
 export type ComplexityLevel = "Baixa" | "Média" | "Alta";
 export type SensitivityLevel = "Baixa" | "Média" | "Alta";
@@ -102,11 +109,12 @@ export interface ExtractedData {
   priceSensitivity: SensitivityLevel | null;
 }
 
-export const STAGE_BADGE_STYLES: Record<DealStage, { bg: string; text: string; dot: string }> = {
-  "Prospecção": { bg: "bg-gray-100", text: "text-gray-600", dot: "bg-gray-400" },
-  "Qualificação": { bg: "bg-blue-50", text: "text-blue-600", dot: "bg-blue-400" },
-  "Proposta Enviada": { bg: "bg-violet-50", text: "text-violet-600", dot: "bg-violet-400" },
-  "Negociação": { bg: "bg-amber-50", text: "text-amber-600", dot: "bg-amber-400" },
-  "Fechado - Ganho": { bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
-  "Fechado - Perdido": { bg: "bg-red-50", text: "text-red-600", dot: "bg-red-400" },
+export const STAGE_BADGE_STYLES: Record<DealStage, { bg: string; text: string; dot: string; color: string }> = {
+  "Lead demonstrou interesse": { bg: "bg-slate-100", text: "text-slate-600", dot: "bg-slate-400", color: "#94a3b8" },
+  "Reunião Introdução":        { bg: "bg-blue-50",   text: "text-blue-600",  dot: "bg-blue-400",  color: "#60a5fa" },
+  "Escopo projeto":            { bg: "bg-indigo-50", text: "text-indigo-600", dot: "bg-indigo-400", color: "#818cf8" },
+  "Proposta comercial":        { bg: "bg-violet-50", text: "text-violet-600", dot: "bg-violet-400", color: "#a78bfa" },
+  "Contrato":                  { bg: "bg-amber-50",  text: "text-amber-600",  dot: "bg-amber-400",  color: "#fbbf24" },
+  "Assinatura":                { bg: "bg-orange-50", text: "text-orange-600", dot: "bg-orange-400", color: "#fb923c" },
+  "Go-Live e Implantação":     { bg: "bg-emerald-50",text: "text-emerald-600",dot: "bg-emerald-400",color: "#34d399" },
 };

@@ -54,7 +54,7 @@ const toEnum = <T extends string>(value: unknown, allowed: T[]): T | null => {
 const toDealStage = (value: unknown): DealStage => {
   return typeof value === "string" && DEAL_STAGES.includes(value as DealStage)
     ? (value as DealStage)
-    : "Prospecção";
+    : "Lead demonstrou interesse";
 };
 
 const normalizeMeetings = (value: unknown): Meeting[] => {
@@ -106,7 +106,7 @@ export const EMPTY_EXTRACTED_DATA: ExtractedData = {
   nextSteps: [],
   responsibleParties: null,
   nextContactDate: null,
-  dealStage: "Prospecção",
+  dealStage: "Lead demonstrou interesse",
   confidenceLevel: null,
   urgency: null,
   risk: null,
