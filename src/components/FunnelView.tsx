@@ -124,7 +124,7 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
         <div style={{ display: "flex", alignItems: "flex-start", gap: 24 }}>
 
           {/* ── SVG FUNNEL ── */}
-          <div style={{ flexShrink: 0, width: SVG_W, height: SVG_H }}>
+          <div style={{ flexShrink: 0, width: SVG_W, height: SVG_H, position: "relative" }}>
             <svg
               viewBox={`0 0 ${SVG_W} ${SVG_H}`}
               width={SVG_W}
@@ -146,11 +146,6 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
               </defs>
 
               {DEAL_STAGES.map((_, i) => {
-                const mw    = midW(i);
-                const cy    = i * BAND_H + BAND_H / 2;
-                // Scale font to band width
-                const fsize = mw > 280 ? 22 : mw > 200 ? 18 : mw > 130 ? 15 : 12;
-                const showLabel = mw > 105;
                 const topW  = MAX_W - i * W_STEP;
 
                 return (
@@ -158,47 +153,133 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
                     {/* Trapezoid band */}
                     <path d={bandPath(i)} fill={`url(#fgr${i})`} />
 
-                    {/* Subtle white highlight at top edge of each band */}
+                    {/* Subtle white highlight at top edge */}
                     <line
                       x1={CX - topW / 2 + 3} y1={i * BAND_H + 1.5}
                       x2={CX + topW / 2 - 3} y2={i * BAND_H + 1.5}
                       stroke="white" strokeWidth={1.5} opacity={0.20}
                     />
 
-                    {/* Count number */}
+                    {/* Count number — pushed to top of band */}
                     <text
                       x={CX}
-                      y={showLabel ? cy - 7 : cy + fsize * 0.38}
+                      y={i * BAND_H + 15}
                       textAnchor="middle"
                       fill="white"
-                      fontSize={fsize}
+                      fontSize={14}
                       fontWeight="800"
                       fontFamily="system-ui,-apple-system,BlinkMacSystemFont,sans-serif"
                       opacity={0.96}
                     >
                       {stageData[i].count}
                     </text>
-
-                    {/* Short name below count (if band wide enough) */}
-                    {showLabel && (
-                      <text
-                        x={CX}
-                        y={cy + 12}
-                        textAnchor="middle"
-                        fill="white"
-                        fontSize={mw > 200 ? 11 : 9.5}
-                        fontWeight="600"
-                        fontFamily="system-ui,-apple-system,BlinkMacSystemFont,sans-serif"
-                        opacity={0.65}
-                        letterSpacing="0.06em"
-                      >
-                        {SHORT[i].toUpperCase()}
-                      </text>
-                    )}
                   </g>
                 );
               })}
             </svg>
+
+            {/* ── Company names overlay ── */}
+            <TooltipProvider delayDuration={150}>
+              <div style={{ position: "absolute", top: 0, left: 0, width: SVG_W, height: SVG_H, pointerEvents: "none" }}>
+                {stageData.map((m, i) => {
+                  const w = midW(i);
+                  const maxShow = w > 250 ? 5 : w > 180 ? 4 : w > 120 ? 3 : 2;
+                  const sorted = [...m.top5]
+                    .sort((a, b) => parseDealValue(b.dealValue) - parseDealValue(a.dealValue));
+                  const companies = sorted.slice(0, maxShow);
+                  const fontSize = w > 250 ? 9.5 : w > 180 ? 8.5 : 7.5;
+
+                  return (
+                    <div
+                      key={m.stage}
+                      style={{
+                        position: "absolute",
+                        top: i * BAND_H + 20,
+                        left: CX - w * 0.42,
+                        width: w * 0.84,
+                        height: BAND_H - 22,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        overflow: "hidden",
+                        pointerEvents: "auto",
+                      }}
+                    >
+                      {companies.map(c => {
+                        const prob = computeDealProbability(c).overall;
+                        const lastMeeting = c.meetings.length > 0
+                          ? c.meetings[c.meetings.length - 1]
+                          : null;
+                        const lastDate = lastMeeting?.date || c.meetingDate;
+
+                        return (
+                          <Tooltip key={c.id}>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => onClientClick(c)}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  color: "white",
+                                  fontSize,
+                                  cursor: "pointer",
+                                  padding: "0 2px",
+                                  lineHeight: 1.3,
+                                  opacity: 0.85,
+                                  maxWidth: "100%",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  fontFamily: "system-ui,-apple-system,BlinkMacSystemFont,sans-serif",
+                                  fontWeight: 500,
+                                  display: "block",
+                                  textAlign: "center",
+                                  width: "100%",
+                                  transition: "opacity 0.15s, font-weight 0.15s",
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.fontWeight = "700"; }}
+                                onMouseLeave={e => { e.currentTarget.style.opacity = "0.85"; e.currentTarget.style.fontWeight = "500"; }}
+                              >
+                                {c.clientName}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" sideOffset={12} className="max-w-xs p-3 z-[100]">
+                              <div className="space-y-1.5">
+                                <p className="font-bold text-sm text-foreground">{c.clientName}</p>
+                                {c.projectName && (
+                                  <p className="text-xs text-muted-foreground">{c.projectName}</p>
+                                )}
+                                <div className="flex items-center gap-2 text-xs">
+                                  <span className="text-muted-foreground">Deal:</span>
+                                  <span className="font-semibold text-foreground">{c.dealValue || "—"}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs">
+                                  <span className="text-muted-foreground">Probabilidade:</span>
+                                  <span className="font-semibold text-foreground">{prob}%</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs">
+                                  <span className="text-muted-foreground">Etapa:</span>
+                                  <span className="font-semibold text-foreground">{c.dealStage}</span>
+                                </div>
+                                {lastDate && (
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <span className="text-muted-foreground">Última interação:</span>
+                                    <span className="font-semibold text-foreground">{lastDate}</span>
+                                  </div>
+                                )}
+                                {c.executiveSummary && (
+                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{c.executiveSummary}</p>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            </TooltipProvider>
           </div>
 
           {/* ── ALIGNED LABELS (right of funnel) ── */}
