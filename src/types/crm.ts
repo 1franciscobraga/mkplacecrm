@@ -1,18 +1,20 @@
 export type DealStage =
-  | "Prospecção"
-  | "Qualificação"
-  | "Proposta Enviada"
-  | "Negociação"
-  | "Fechado - Ganho"
-  | "Fechado - Perdido";
+  | "Lead demonstrou interesse"
+  | "Reunião Introdução"
+  | "Escopo do projeto"
+  | "Proposta comercial"
+  | "Contrato"
+  | "Assinatura"
+  | "Go-Live e Implantação";
 
 export const DEAL_STAGES: DealStage[] = [
-  "Prospecção",
-  "Qualificação",
-  "Proposta Enviada",
-  "Negociação",
-  "Fechado - Ganho",
-  "Fechado - Perdido",
+  "Lead demonstrou interesse",
+  "Reunião Introdução",
+  "Escopo do projeto",
+  "Proposta comercial",
+  "Contrato",
+  "Assinatura",
+  "Go-Live e Implantação",
 ];
 
 export type ComplexityLevel = "Baixa" | "Média" | "Alta";
@@ -103,10 +105,11 @@ export interface ExtractedData {
 }
 
 export const STAGE_BADGE_STYLES: Record<DealStage, { bg: string; text: string; dot: string }> = {
-  "Prospecção": { bg: "bg-gray-100", text: "text-gray-600", dot: "bg-gray-400" },
-  "Qualificação": { bg: "bg-blue-50", text: "text-blue-600", dot: "bg-blue-400" },
-  "Proposta Enviada": { bg: "bg-violet-50", text: "text-violet-600", dot: "bg-violet-400" },
-  "Negociação": { bg: "bg-amber-50", text: "text-amber-600", dot: "bg-amber-400" },
-  "Fechado - Ganho": { bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
-  "Fechado - Perdido": { bg: "bg-red-50", text: "text-red-600", dot: "bg-red-400" },
+  "Lead demonstrou interesse": { bg: "bg-gray-100",    text: "text-gray-600",    dot: "bg-gray-400"    },
+  "Reunião Introdução":        { bg: "bg-blue-50",     text: "text-blue-600",    dot: "bg-blue-400"    },
+  "Escopo do projeto":         { bg: "bg-cyan-50",     text: "text-cyan-700",    dot: "bg-cyan-400"    },
+  "Proposta comercial":        { bg: "bg-violet-50",   text: "text-violet-600",  dot: "bg-violet-400"  },
+  "Contrato":                  { bg: "bg-amber-50",    text: "text-amber-600",   dot: "bg-amber-400"   },
+  "Assinatura":                { bg: "bg-orange-50",   text: "text-orange-600",  dot: "bg-orange-400"  },
+  "Go-Live e Implantação":     { bg: "bg-emerald-50",  text: "text-emerald-600", dot: "bg-emerald-400" },
 };

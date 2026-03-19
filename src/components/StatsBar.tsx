@@ -8,10 +8,10 @@ interface StatsBarProps {
 const StatsBar = ({ clients }: StatsBarProps) => {
   const totalClients = clients.length;
   const openDeals = clients.filter(
-    (c) => c.dealStage !== "Fechado - Ganho" && c.dealStage !== "Fechado - Perdido"
+    (c) => c.dealStage !== "Go-Live e Implantação"
   ).length;
   const closedWonThisMonth = clients.filter((c) => {
-    if (c.dealStage !== "Fechado - Ganho") return false;
+    if (c.dealStage !== "Go-Live e Implantação") return false;
     const now = new Date();
     const created = new Date(c.createdAt);
     return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();

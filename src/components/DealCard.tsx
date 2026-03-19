@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Client, STAGE_BADGE_STYLES } from "@/types/crm";
 import { GripVertical, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { computeDealProbability, probabilityBg } from "@/lib/dealProbability";
 
 interface DealCardProps {
   client: Client;
@@ -30,6 +31,7 @@ const DealCard = ({ client, onClick, onDragStart, onEdit, onDelete }: DealCardPr
     .toUpperCase();
 
   const badge = STAGE_BADGE_STYLES[client.dealStage];
+  const prob = computeDealProbability(client);
 
   return (
     <div
@@ -75,11 +77,18 @@ const DealCard = ({ client, onClick, onDragStart, onEdit, onDelete }: DealCardPr
         </div>
       </div>
 
-      {client.dealValue && (
-        <p className="text-[13px] font-semibold text-primary mt-3">{client.dealValue}</p>
-      )}
-
       <div className="flex items-center justify-between mt-3">
+        {client.dealValue && (
+          <p className="text-[13px] font-semibold text-primary">{client.dealValue}</p>
+        )}
+        {client.dealStage !== "Go-Live e Implantação" && (
+          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${probabilityBg(prob.overall)}`}>
+            {prob.overall}% fechar
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between mt-2">
         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.bg} ${badge.text}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
           {client.dealStage}

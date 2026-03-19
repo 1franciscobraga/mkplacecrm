@@ -1,7 +1,9 @@
 import { useState, DragEvent } from "react";
 import { Client, DEAL_STAGES, DealStage, STAGE_BADGE_STYLES } from "@/types/crm";
 import DealCard from "./DealCard";
-import { Inbox } from "lucide-react";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { computeDealProbability, probabilityBg, probabilityColor } from "@/lib/dealProbability";
+import { Inbox, Building2, User, Zap, AlertTriangle, TrendingUp } from "lucide-react";
 
 interface PipelineBoardProps {
   clients: Client[];
@@ -9,6 +11,120 @@ interface PipelineBoardProps {
   onClientClick: (client: Client) => void;
   onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
+}
+
+function CompanyHoverCard({ client, onClientClick }: { client: Client; onClientClick: (c: Client) => void }) {
+  const prob = computeDealProbability(client);
+
+  const MiniBar = ({ value, color }: { value: number; color: string }) => (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${value}%` }} />
+      </div>
+      <span className="text-[10px] tabular-nums text-muted-foreground w-7 text-right">{value}%</span>
+    </div>
+  );
+
+  return (
+    <HoverCard openDelay={150} closeDelay={80}>
+      <HoverCardTrigger asChild>
+        <button
+          onClick={() => onClientClick(client)}
+          className="w-full flex items-center justify-between gap-2 px-2 py-1 rounded-md hover:bg-card transition-colors text-left"
+        >
+          <span className="text-xs text-foreground truncate font-medium">{client.clientName}</span>
+          <span className={`text-[10px] font-bold tabular-nums flex-shrink-0 ${probabilityColor(prob.overall)}`}>
+            {prob.overall}%
+          </span>
+        </button>
+      </HoverCardTrigger>
+      <HoverCardContent className="w-72 p-4" side="right" align="start">
+        {/* Header */}
+        <div className="mb-3">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="font-semibold text-sm text-foreground">{client.clientName}</p>
+              {client.projectName && (
+                <p className="text-xs text-muted-foreground">{client.projectName}</p>
+              )}
+            </div>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${probabilityBg(prob.overall)}`}>
+              {prob.overall}% fechamento
+            </span>
+          </div>
+        </div>
+
+        {/* Key fields */}
+        <div className="space-y-1.5 mb-3">
+          {client.contactName && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <User className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">
+                {client.contactName}{client.contactRole ? ` · ${client.contactRole}` : ""}
+              </span>
+            </div>
+          )}
+          {client.businessModel && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Building2 className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">{client.businessModel}</span>
+            </div>
+          )}
+          {client.dealValue && (
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+              <TrendingUp className="w-3 h-3 flex-shrink-0" />
+              <span>{client.dealValue}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Signals row */}
+        {(client.urgency || client.risk) && (
+          <div className="flex items-center gap-2 mb-3">
+            {client.urgency && (
+              <span className={`flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                client.urgency === "Alta" ? "bg-amber-50 text-amber-700" :
+                client.urgency === "Média" ? "bg-blue-50 text-blue-700" :
+                "bg-gray-100 text-gray-600"
+              }`}>
+                <Zap className="w-2.5 h-2.5" />
+                {client.urgency}
+              </span>
+            )}
+            {client.risk && (
+              <span className={`flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                client.risk === "Alta" ? "bg-red-50 text-red-700" :
+                client.risk === "Média" ? "bg-amber-50 text-amber-700" :
+                "bg-emerald-50 text-emerald-700"
+              }`}>
+                <AlertTriangle className="w-2.5 h-2.5" />
+                Risco {client.risk}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Probability breakdown */}
+        <div className="border-t border-border pt-3 space-y-1.5">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mb-2">Probabilidade de fechamento</p>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span className="w-20 flex-shrink-0">Mkplace fit</span>
+              <MiniBar value={prob.mkplace} color="bg-violet-400" />
+            </div>
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span className="w-20 flex-shrink-0">Cliente</span>
+              <MiniBar value={prob.client} color="bg-blue-400" />
+            </div>
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span className="w-20 flex-shrink-0">Transcrição</span>
+              <MiniBar value={prob.transcript} color="bg-amber-400" />
+            </div>
+          </div>
+        </div>
+      </HoverCardContent>
+    </HoverCard>
+  );
 }
 
 const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete }: PipelineBoardProps) => {
@@ -40,6 +156,11 @@ const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete
         const isOver = dragOverStage === stage;
         const badge = STAGE_BADGE_STYLES[stage];
 
+        // Top 5 companies ranked by overall probability
+        const top5 = [...stageClients]
+          .sort((a, b) => computeDealProbability(b).overall - computeDealProbability(a).overall)
+          .slice(0, 5);
+
         return (
           <div
             key={stage}
@@ -50,6 +171,7 @@ const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete
             onDrop={(e) => handleDrop(e, stage)}
             onDragLeave={handleDragLeave}
           >
+            {/* Stage header */}
             <div className="px-4 py-3 flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
               <h3 className="font-medium text-sm text-foreground">{stage}</h3>
@@ -57,7 +179,27 @@ const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete
                 {stageClients.length}
               </span>
             </div>
-            <div className="flex-1 px-3 pb-3 space-y-3 overflow-y-auto max-h-[calc(100vh-280px)]">
+
+            {/* Top 5 companies */}
+            {top5.length > 0 && (
+              <div className="px-3 pb-2">
+                <div className="bg-card/70 rounded-lg px-2 pt-2 pb-1">
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold px-1 mb-1">
+                    Top {top5.length}
+                  </p>
+                  {top5.map((client) => (
+                    <CompanyHoverCard
+                      key={client.id}
+                      client={client}
+                      onClientClick={onClientClick}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Deal cards */}
+            <div className="flex-1 px-3 pb-3 space-y-3 overflow-y-auto max-h-[calc(100vh-380px)]">
               {stageClients.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
                   <Inbox className="w-8 h-8 mb-2 opacity-30" />

@@ -1,0 +1,429 @@
+import { useMemo } from "react";
+import { Client, DEAL_STAGES, DealStage } from "@/types/crm";
+import { computeDealProbability } from "@/lib/dealProbability";
+import { Users, DollarSign, TrendingUp, Target } from "lucide-react";
+
+interface FunnelViewProps {
+  clients: Client[];
+  onClientClick: (client: Client) => void;
+}
+
+// ─── Geometry ──────────────────────────────────────────────────────────────────
+const N       = DEAL_STAGES.length; // 7
+const BAND_H  = 68;                 // height of each funnel band (px in SVG coords)
+const CX      = 230;                // horizontal center of the SVG
+const MAX_W   = 420;                // width of the TOP band
+const MIN_W   = 70;                 // width of the BOTTOM band
+const W_STEP  = (MAX_W - MIN_W) / N; // = 50 px reduction per band
+const SVG_W   = CX * 2;            // 460
+const SVG_H   = N * BAND_H;        // 476
+
+// Width at the vertical midpoint of band i
+function midW(i: number) { return MAX_W - (i + 0.5) * W_STEP; }
+
+// SVG <path> for band i (trapezoid, no gaps)
+function bandPath(i: number): string {
+  const topW = MAX_W - i * W_STEP;
+  const botW = MAX_W - (i + 1) * W_STEP;
+  const yT   = i * BAND_H;
+  const yB   = (i + 1) * BAND_H;
+  const tL = CX - topW / 2, tR = CX + topW / 2;
+  const bL = CX - botW / 2, bR = CX + botW / 2;
+  return `M${tL},${yT} L${tR},${yT} L${bR},${yB} L${bL},${yB} Z`;
+}
+
+// ─── Color palette ─────────────────────────────────────────────────────────────
+const PALETTE: { fill: string; dark: string }[] = [
+  { fill: "#64748b", dark: "#475569" }, // 1. Lead        – slate
+  { fill: "#3b82f6", dark: "#2563eb" }, // 2. Reunião     – blue
+  { fill: "#06b6d4", dark: "#0891b2" }, // 3. Escopo      – cyan
+  { fill: "#8b5cf6", dark: "#7c3aed" }, // 4. Proposta    – violet
+  { fill: "#f59e0b", dark: "#d97706" }, // 5. Contrato    – amber
+  { fill: "#f97316", dark: "#ea580c" }, // 6. Assinatura  – orange
+  { fill: "#10b981", dark: "#059669" }, // 7. Go-Live     – emerald
+];
+
+// Short labels for inside the bands
+const SHORT: string[] = [
+  "Lead", "Reunião", "Escopo", "Proposta", "Contrato", "Assinatura", "Go-Live",
+];
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+function parseDealValue(val: string | null): number {
+  if (!val) return 0;
+  const n = parseFloat(val.replace(/[^\d.,]/g, "").replace(",", "."));
+  return isNaN(n) ? 0 : n;
+}
+
+function fmtCurrency(v: number): string {
+  if (v === 0) return "—";
+  if (v >= 1_000_000) return `R$${(v / 1e6).toFixed(1)}M`;
+  if (v >= 1_000)     return `R$${(v / 1e3).toFixed(0)}k`;
+  return `R$${v.toFixed(0)}`;
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────────
+export default function FunnelView({ clients, onClientClick }: FunnelViewProps) {
+  const stageData = useMemo(() => {
+    return DEAL_STAGES.map((stage, idx) => {
+      const sc    = clients.filter(c => c.dealStage === stage);
+      const count = sc.length;
+
+      // Cumulative: how many leads are at this stage or beyond
+      const fromHere = clients.filter(c => DEAL_STAGES.indexOf(c.dealStage) >= idx).length;
+      const fromNext  = idx < N - 1
+        ? clients.filter(c => DEAL_STAGES.indexOf(c.dealStage) > idx).length
+        : null;
+
+      const convRate = fromNext !== null && fromHere > 0
+        ? Math.round((fromNext / fromHere) * 100)
+        : null;
+
+      const revenue = sc.reduce((s, c) =>
+        s + parseDealValue(c.dealValue) * computeDealProbability(c).overall / 100, 0);
+
+      const top5 = [...sc]
+        .sort((a, b) => computeDealProbability(b).overall - computeDealProbability(a).overall)
+        .slice(0, 5);
+
+      return { stage, count, convRate, revenue, top5 };
+    });
+  }, [clients]);
+
+  // ── Summary stats ────────────────────────────────────────────────
+  const totalRevenue = stageData.reduce((s, m) => s + m.revenue, 0);
+  const totalLeads   = clients.length;
+  const firstCount   = stageData[0].count;
+  const lastCount    = stageData[N - 1].count;
+  const overallConv  = firstCount > 0 ? Math.round((lastCount / firstCount) * 100) : 0;
+  const withVal      = clients.filter(c => parseDealValue(c.dealValue) > 0);
+  const avgTicket    = withVal.length > 0
+    ? withVal.reduce((s, c) => s + parseDealValue(c.dealValue), 0) / withVal.length
+    : 0;
+
+  return (
+    <div className="flex-1 flex overflow-hidden" style={{ background: "#f8fafc" }}>
+
+      {/* ═══════════════════════════════════════════════
+          LEFT AREA — funnel visual + aligned labels
+      ═══════════════════════════════════════════════ */}
+      <div className="flex-1 flex flex-col items-center py-8 px-6 overflow-y-auto min-w-0">
+
+        {/* Heading */}
+        <div className="mb-8 text-center">
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1e293b", letterSpacing: "-0.02em" }}>
+            Funil de Vendas
+          </h2>
+          <p style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>
+            {totalLeads} leads ativos no pipeline
+          </p>
+        </div>
+
+        {/* Row: SVG funnel + right labels */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 24 }}>
+
+          {/* ── SVG FUNNEL ── */}
+          <div style={{ flexShrink: 0, width: SVG_W, height: SVG_H }}>
+            <svg
+              viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+              width={SVG_W}
+              height={SVG_H}
+              style={{
+                display: "block",
+                filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.12))",
+                borderRadius: 4,
+                overflow: "visible",
+              }}
+            >
+              <defs>
+                {PALETTE.map((p, i) => (
+                  <linearGradient key={i} id={`fgr${i}`} x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%"   stopColor={p.fill} />
+                    <stop offset="100%" stopColor={p.dark} />
+                  </linearGradient>
+                ))}
+              </defs>
+
+              {DEAL_STAGES.map((_, i) => {
+                const mw    = midW(i);
+                const cy    = i * BAND_H + BAND_H / 2;
+                // Scale font to band width
+                const fsize = mw > 280 ? 22 : mw > 200 ? 18 : mw > 130 ? 15 : 12;
+                const showLabel = mw > 105;
+                const topW  = MAX_W - i * W_STEP;
+
+                return (
+                  <g key={i}>
+                    {/* Trapezoid band */}
+                    <path d={bandPath(i)} fill={`url(#fgr${i})`} />
+
+                    {/* Subtle white highlight at top edge of each band */}
+                    <line
+                      x1={CX - topW / 2 + 3} y1={i * BAND_H + 1.5}
+                      x2={CX + topW / 2 - 3} y2={i * BAND_H + 1.5}
+                      stroke="white" strokeWidth={1.5} opacity={0.20}
+                    />
+
+                    {/* Count number */}
+                    <text
+                      x={CX}
+                      y={showLabel ? cy - 7 : cy + fsize * 0.38}
+                      textAnchor="middle"
+                      fill="white"
+                      fontSize={fsize}
+                      fontWeight="800"
+                      fontFamily="system-ui,-apple-system,BlinkMacSystemFont,sans-serif"
+                      opacity={0.96}
+                    >
+                      {stageData[i].count}
+                    </text>
+
+                    {/* Short name below count (if band wide enough) */}
+                    {showLabel && (
+                      <text
+                        x={CX}
+                        y={cy + 12}
+                        textAnchor="middle"
+                        fill="white"
+                        fontSize={mw > 200 ? 11 : 9.5}
+                        fontWeight="600"
+                        fontFamily="system-ui,-apple-system,BlinkMacSystemFont,sans-serif"
+                        opacity={0.65}
+                        letterSpacing="0.06em"
+                      >
+                        {SHORT[i].toUpperCase()}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+
+          {/* ── ALIGNED LABELS (right of funnel) ── */}
+          <div style={{ display: "flex", flexDirection: "column", height: SVG_H }}>
+            {stageData.map((m, i) => (
+              <div
+                key={m.stage}
+                style={{
+                  height: BAND_H,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  paddingLeft: 14,
+                  borderLeft: `3px solid ${PALETTE[i].fill}`,
+                  minWidth: 200,
+                }}
+              >
+                {/* Full stage name */}
+                <p style={{
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  color: "#1e293b",
+                  lineHeight: 1.3,
+                  marginBottom: 2,
+                }}>
+                  {m.stage}
+                </p>
+
+                {/* Count + conversion */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: PALETTE[i].fill }}>
+                    {m.count} lead{m.count !== 1 ? "s" : ""}
+                  </span>
+                  {m.convRate !== null && (
+                    <span style={{ fontSize: 10, color: "#94a3b8" }}>
+                      <span style={{ fontWeight: 700, color: "#475569" }}>{m.convRate}%</span> conv.
+                    </span>
+                  )}
+                </div>
+
+                {/* Revenue estimate */}
+                {m.revenue > 0 && (
+                  <p style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>
+                    Rec. est.:&nbsp;
+                    <span style={{ fontWeight: 700, color: "#475569" }}>{fmtCurrency(m.revenue)}</span>
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════
+          RIGHT PANEL — KPIs + top companies per stage
+      ═══════════════════════════════════════════════ */}
+      <div style={{
+        width: 272,
+        flexShrink: 0,
+        background: "#ffffff",
+        borderLeft: "1px solid #e2e8f0",
+        display: "flex",
+        flexDirection: "column",
+        overflowY: "auto",
+      }}>
+
+        {/* KPI cards */}
+        <div style={{ padding: "20px 18px 16px", borderBottom: "1px solid #f1f5f9" }}>
+          <p style={{
+            fontSize: 9,
+            fontWeight: 800,
+            color: "#94a3b8",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            marginBottom: 14,
+          }}>
+            Pipeline Overview
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <KpiCard icon={<Users    size={14} />} label="Total de Leads"   value={String(totalLeads)}        accent="#2563eb" />
+            <KpiCard icon={<TrendingUp size={14} />} label="Conversão Geral" value={`${overallConv}%`}        accent="#059669" />
+            <KpiCard icon={<DollarSign size={14} />} label="Receita Estimada" value={fmtCurrency(totalRevenue)} accent="#7c3aed" />
+            <KpiCard icon={<Target   size={14} />} label="Ticket Médio"     value={fmtCurrency(avgTicket)}    accent="#d97706" />
+          </div>
+        </div>
+
+        {/* Top companies per stage */}
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          <div style={{
+            padding: "9px 18px",
+            background: "#f8fafc",
+            borderBottom: "1px solid #f1f5f9",
+          }}>
+            <p style={{
+              fontSize: 9,
+              fontWeight: 800,
+              color: "#94a3b8",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+            }}>
+              Top Empresas por Etapa
+            </p>
+          </div>
+
+          {stageData.map((m, i) =>
+            m.top5.length === 0 ? null : (
+              <div key={m.stage} style={{
+                padding: "11px 18px",
+                borderBottom: "1px solid #f8fafc",
+              }}>
+                {/* Stage chip */}
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                  <div style={{
+                    width: 7, height: 7,
+                    borderRadius: 2,
+                    background: PALETTE[i].fill,
+                    flexShrink: 0,
+                  }} />
+                  <p style={{
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    color: "#334155",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}>
+                    {m.stage}
+                  </p>
+                </div>
+
+                {/* Company list */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  {m.top5.slice(0, 3).map(c => {
+                    const prob = computeDealProbability(c).overall;
+                    const probColor = prob >= 65 ? "#059669" : prob >= 40 ? "#d97706" : "#dc2626";
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => onClientClick(c)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 6,
+                          padding: "4px 8px",
+                          borderRadius: 5,
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          transition: "background 0.1s",
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                      >
+                        <span style={{
+                          fontSize: 10.5,
+                          color: "#475569",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}>
+                          {c.clientName}
+                        </span>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: probColor, flexShrink: 0 }}>
+                          {prob}%
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── KPI Card sub-component ────────────────────────────────────────────────────
+function KpiCard({
+  icon, label, value, accent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  accent: string;
+}) {
+  return (
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      padding: "9px 11px",
+      borderRadius: 9,
+      background: "#f8fafc",
+    }}>
+      <div style={{
+        width: 30, height: 30,
+        borderRadius: 7,
+        background: `${accent}1a`,
+        color: accent,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}>
+        {icon}
+      </div>
+      <div>
+        <p style={{
+          fontSize: 9,
+          color: "#94a3b8",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          lineHeight: 1,
+          marginBottom: 3,
+        }}>
+          {label}
+        </p>
+        <p style={{ fontSize: 15, fontWeight: 800, color: "#1e293b", lineHeight: 1 }}>
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
