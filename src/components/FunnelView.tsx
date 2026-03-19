@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Client, DEAL_STAGES, DealStage } from "@/types/crm";
 import { computeDealProbability } from "@/lib/dealProbability";
 import { Users, DollarSign, TrendingUp, Target } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 interface FunnelViewProps {
   clients: Client[];
