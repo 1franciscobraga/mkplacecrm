@@ -97,6 +97,7 @@ export interface ExtractedData {
   nextSteps: string[];
   responsibleParties: string | null;
   nextContactDate: string | null;
+  leadSource: string | null;
   dealStage: DealStage;
   confidenceLevel: number | null;
   urgency: ComplexityLevel | null;
