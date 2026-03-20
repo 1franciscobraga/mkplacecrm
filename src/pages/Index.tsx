@@ -133,6 +133,7 @@ const Index = () => {
       <ClientDrawer client={selectedClient} onClose={() => setSelectedClient(null)} onUpdate={handleUpdateClient} />
       <TranscriptModal open={transcriptOpen} onClose={() => setTranscriptOpen(false)} onSave={handleNewClient} />
       <ManualClientModal open={manualOpen} onClose={() => setManualOpen(false)} onSave={handleNewClient} />
+      <MeetingNotesModal open={meetingNotesOpen} onClose={() => setMeetingNotesOpen(false)} clients={clients} onUpdateClient={handleUpdateClient} onAddClient={handleNewClient} />
 
       {/* Delete Confirmation Dialog */}
       {deleteTarget && (
