@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Client, STAGE_BADGE_STYLES, DEAL_STAGES, DealStage, ComplexityLevel, PotentialLevel, SensitivityLevel } from "@/types/crm";
-import { X, Pencil, RotateCcw } from "lucide-react";
+import { X, Pencil, RotateCcw, AlertCircle, CheckCircle2, Clock, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ClientDrawerProps {
   client: Client | null;
@@ -11,6 +12,8 @@ interface ClientDrawerProps {
 const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Client | null>(null);
+  const [aiSuggestion, setAiSuggestion] = useState<{ nextStep: string; deadline: string } | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   if (!client) return null;
 
@@ -35,6 +38,50 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
   const d = editing && draft ? draft : client;
   const set = (field: keyof Client, value: any) => {
     if (draft) setDraft({ ...draft, [field]: value });
+  };
+
+  const getStepStatus = () => {
+    if (!d.nextContactDate) return { status: "no_deadline" as const, label: "Sem prazo", color: "text-muted-foreground", bg: "bg-secondary", Icon: Clock };
+    const due = new Date(d.nextContactDate);
+    const diffDays = Math.ceil((due.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { status: "overdue" as const, label: "Atrasado", color: "text-red-700", bg: "bg-red-50", Icon: AlertCircle };
+    if (diffDays <= 3) return { status: "approaching" as const, label: "Próximo do vencimento", color: "text-amber-700", bg: "bg-amber-50", Icon: AlertTriangle };
+    return { status: "on_track" as const, label: "Em dia", color: "text-emerald-700", bg: "bg-emerald-50", Icon: CheckCircle2 };
+  };
+
+  const stepStatus = getStepStatus();
+
+  const handleAiSuggest = async () => {
+    setAiLoading(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke("suggest-next-step", {
+        body: {
+          clientName: client.clientName,
+          dealStage: client.dealStage,
+          nextSteps: client.nextSteps,
+          executiveSummary: client.executiveSummary,
+          meetingDate: client.meetingDate,
+          notes: client.notes,
+        },
+      });
+      if (error) throw error;
+      setAiSuggestion(result);
+    } catch (e) {
+      console.error("AI suggestion error:", e);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applyAiSuggestion = () => {
+    if (!aiSuggestion) return;
+    const newSteps = [...(d.nextSteps || []), aiSuggestion.nextStep];
+    if (editing && draft) {
+      setDraft({ ...draft, nextSteps: newSteps, nextContactDate: aiSuggestion.deadline });
+    } else {
+      onUpdate({ ...client, nextSteps: newSteps, nextContactDate: aiSuggestion.deadline });
+    }
+    setAiSuggestion(null);
   };
 
   const badge = STAGE_BADGE_STYLES[d.dealStage];
@@ -111,8 +158,61 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
               <ReadOrEditTextarea editing={editing} label="Stack / Integrações Relevantes" value={d.techStack} onChange={(v) => set("techStack", v || null)} />
               <ReadOrEditSelect editing={editing} label="Complexidade de Implementação" value={d.implementationComplexity} onChange={(v) => set("implementationComplexity", v || null)} options={["Baixa", "Média", "Alta"]} />
 
-              {/* Plano de Ação */}
+              {/* Plano de Ação — Status */}
               <SectionHeader label="Plano de Ação" />
+
+              {/* Next step status card */}
+              {(d.nextSteps?.length > 0 || d.nextContactDate) && (
+                <div className={`rounded-lg p-3 border ${stepStatus.bg} border-border`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <stepStatus.Icon className={`w-4 h-4 ${stepStatus.color}`} />
+                    <span className={`text-xs font-semibold ${stepStatus.color}`}>{stepStatus.label}</span>
+                    {d.nextContactDate && (
+                      <span className="text-xs text-muted-foreground ml-auto">
+                        Prazo: {new Date(d.nextContactDate).toLocaleDateString("pt-BR")}
+                      </span>
+                    )}
+                  </div>
+                  {d.nextSteps?.filter(s => s.trim()).map((step, i) => (
+                    <div key={i} className="flex items-start gap-2 ml-6">
+                      <span className="w-1 h-1 rounded-full bg-foreground/40 mt-1.5 flex-shrink-0" />
+                      <span className="text-sm text-foreground">{step}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* AI suggestion */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleAiSuggest}
+                  disabled={aiLoading}
+                  className="h-8 px-3 flex items-center gap-1.5 text-xs font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors disabled:opacity-50"
+                >
+                  {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                  Sugerir próximo passo com IA
+                </button>
+              </div>
+
+              {aiSuggestion && (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+                  <p className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3" />
+                    Sugestão da IA
+                  </p>
+                  <p className="text-sm text-foreground">{aiSuggestion.nextStep}</p>
+                  <p className="text-xs text-muted-foreground">Prazo sugerido: {new Date(aiSuggestion.deadline).toLocaleDateString("pt-BR")}</p>
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={applyAiSuggestion} className="h-7 px-3 bg-primary text-primary-foreground rounded-md text-xs font-medium hover:opacity-90 transition-all">
+                      Aplicar
+                    </button>
+                    <button onClick={() => setAiSuggestion(null)} className="h-7 px-3 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      Descartar
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <ReadOrEditList editing={editing} label="Próximos Passos" items={d.nextSteps} onChange={(v) => set("nextSteps", v)} />
               <ReadOrEditTextarea editing={editing} label="Responsáveis" value={d.responsibleParties} onChange={(v) => set("responsibleParties", v || null)} />
               <ReadOrEdit editing={editing} label="Data do Próximo Contato" value={d.nextContactDate} onChange={(v) => set("nextContactDate", v || null)} type="date" />

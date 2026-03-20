@@ -10,7 +10,8 @@ import NextStepsView from "@/components/NextStepsView";
 import ClientDrawer from "@/components/ClientDrawer";
 import TranscriptModal from "@/components/TranscriptModal";
 import ManualClientModal from "@/components/ManualClientModal";
-import { Plus, LayoutGrid, Table, FileText, PenLine, ChevronDown, TrendingDown, ListChecks } from "lucide-react";
+import MeetingNotesModal from "@/components/MeetingNotesModal";
+import { Plus, LayoutGrid, Table, FileText, PenLine, ChevronDown, TrendingDown, ListChecks, ClipboardList } from "lucide-react";
 
 const Index = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -18,6 +19,7 @@ const Index = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+  const [meetingNotesOpen, setMeetingNotesOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -96,8 +98,16 @@ const Index = () => {
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
               >
                 <FileText className="w-4 h-4 text-muted-foreground" />
-                Inserir Transcrição
+                Inserir Transcrição (Cliente)
               </button>
+              <button
+                onClick={() => { setDropdownOpen(false); setMeetingNotesOpen(true); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
+              >
+                <ClipboardList className="w-4 h-4 text-muted-foreground" />
+                Processar Reunião Interna
+              </button>
+              <div className="border-t border-border my-1" />
               <button
                 onClick={() => { setDropdownOpen(false); setManualOpen(true); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
@@ -123,6 +133,7 @@ const Index = () => {
       <ClientDrawer client={selectedClient} onClose={() => setSelectedClient(null)} onUpdate={handleUpdateClient} />
       <TranscriptModal open={transcriptOpen} onClose={() => setTranscriptOpen(false)} onSave={handleNewClient} />
       <ManualClientModal open={manualOpen} onClose={() => setManualOpen(false)} onSave={handleNewClient} />
+      <MeetingNotesModal open={meetingNotesOpen} onClose={() => setMeetingNotesOpen(false)} clients={clients} onUpdateClient={handleUpdateClient} onAddClient={handleNewClient} />
 
       {/* Delete Confirmation Dialog */}
       {deleteTarget && (

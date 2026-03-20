@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Client, STAGE_BADGE_STYLES } from "@/types/crm";
-import { GripVertical, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { GripVertical, MoreVertical, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { computeDealProbability, probabilityBg } from "@/lib/dealProbability";
 
 interface DealCardProps {
@@ -32,6 +32,12 @@ const DealCard = ({ client, onClick, onDragStart, onEdit, onDelete }: DealCardPr
 
   const badge = STAGE_BADGE_STYLES[client.dealStage];
   const prob = computeDealProbability(client);
+
+  const isOverdue = (() => {
+    if (!client.nextContactDate) return false;
+    const due = new Date(client.nextContactDate);
+    return due.getTime() < Date.now();
+  })();
 
   return (
     <div
@@ -89,10 +95,17 @@ const DealCard = ({ client, onClick, onDragStart, onEdit, onDelete }: DealCardPr
       </div>
 
       <div className="flex items-center justify-between mt-2">
-        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.bg} ${badge.text}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
-          {client.dealStage}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.bg} ${badge.text}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+            {client.dealStage}
+          </span>
+          {isOverdue && (
+            <span className="flex items-center gap-1 text-[10px] font-medium text-red-600" title="Próximo passo atrasado">
+              <AlertCircle className="w-3.5 h-3.5" />
+            </span>
+          )}
+        </div>
         {client.meetingDate && (
           <p className="text-xs text-gray-400">
             {new Date(client.meetingDate).toLocaleDateString("pt-BR")}
