@@ -59,6 +59,7 @@ export interface Client {
   expansionPotential: PotentialLevel | null;
   priceSensitivity: SensitivityLevel | null;
   // System
+  leadSource: string | null;
   assignedTo: string;
   createdAt: string;
   updatedAt: string;
@@ -96,6 +97,7 @@ export interface ExtractedData {
   nextSteps: string[];
   responsibleParties: string | null;
   nextContactDate: string | null;
+  leadSource: string | null;
   dealStage: DealStage;
   confidenceLevel: number | null;
   urgency: ComplexityLevel | null;
