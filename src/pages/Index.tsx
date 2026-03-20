@@ -14,7 +14,7 @@ import { Plus, LayoutGrid, Table, FileText, PenLine, ChevronDown, TrendingDown, 
 
 const Index = () => {
   const [clients, setClients] = useState<Client[]>([]);
-  const [activeTab, setActiveTab] = useState<"pipeline" | "clients" | "funnel">("pipeline");
+  const [activeTab, setActiveTab] = useState<"pipeline" | "clients" | "funnel" | "nextsteps">("pipeline");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
