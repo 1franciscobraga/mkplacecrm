@@ -102,7 +102,13 @@ const ClientFormFields = ({
             value={data.companyGroup || ""}
             onChange={(v) => set("companyGroup", v || null)}
             placeholder="Holding ou empresa-mãe"
-            className="col-span-2"
+          />
+          <Field
+            id="leadSource"
+            label="Origem do Cliente"
+            value={data.leadSource || ""}
+            onChange={(v) => set("leadSource", v || null)}
+            placeholder="Ex: indicação do João, inbound, evento"
           />
         </div>
 

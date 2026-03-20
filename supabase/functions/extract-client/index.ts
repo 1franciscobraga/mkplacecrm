@@ -52,6 +52,7 @@ Return ONLY valid JSON with no markdown, no explanation, no code blocks.
   "contactEmail": null,
   "contactPhone": null,
   "companyGroup": "string or null — holding or parent company if mentioned",
+  "leadSource": "string or null — who or what originated this lead (e.g. 'indicação do João', 'inbound', 'evento', 'cold outbound', 'LinkedIn'). Infer from context if mentioned.",
   "executiveSummary": "string or null — 2-3 sentence executive summary of current deal status and context",
   "painPointsAndChallenges": ["array of strings — specific problems, blockers, and challenges the client faces"],
   "goalsAndExpectations": ["array of strings — what the client wants to achieve, their success criteria"],

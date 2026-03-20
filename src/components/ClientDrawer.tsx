@@ -134,7 +134,8 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                 <ReadOrEdit editing={editing} label="Cargo / Função" value={d.contactRole} onChange={(v) => set("contactRole", v || null)} />
                 <ReadOrEdit editing={editing} label="Email" value={d.contactEmail} onChange={(v) => set("contactEmail", v || null)} type="email" />
                 <ReadOrEdit editing={editing} label="Telefone" value={d.contactPhone} onChange={(v) => set("contactPhone", v || null)} />
-                <ReadOrEdit editing={editing} label="Empresa / Grupo Econômico" value={d.companyGroup} onChange={(v) => set("companyGroup", v || null)} className="col-span-2" />
+                <ReadOrEdit editing={editing} label="Empresa / Grupo Econômico" value={d.companyGroup} onChange={(v) => set("companyGroup", v || null)} />
+                <ReadOrEdit editing={editing} label="Origem do Cliente" value={d.leadSource} onChange={(v) => set("leadSource", v || null)} />
               </div>
 
               {/* Análise Comercial */}
