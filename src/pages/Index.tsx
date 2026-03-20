@@ -6,6 +6,7 @@ import StatsBar from "@/components/StatsBar";
 import PipelineBoard from "@/components/PipelineBoard";
 import ClientsTable from "@/components/ClientsTable";
 import FunnelView from "@/components/FunnelView";
+import NextStepsView from "@/components/NextStepsView";
 import ClientDrawer from "@/components/ClientDrawer";
 import TranscriptModal from "@/components/TranscriptModal";
 import ManualClientModal from "@/components/ManualClientModal";
