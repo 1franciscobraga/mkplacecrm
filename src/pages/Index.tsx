@@ -76,7 +76,8 @@ const Index = () => {
         <div className="flex items-center gap-6">
           <TabButton active={activeTab === "pipeline"} onClick={() => setActiveTab("pipeline")} icon={LayoutGrid} label="Pipeline" />
           <TabButton active={activeTab === "clients"} onClick={() => setActiveTab("clients")} icon={Table} label="Todos os Clientes" />
-          <TabButton active={activeTab === "funnel"} onClick={() => setActiveTab("funnel")} icon={TrendingDown} label="Funil" />
+           <TabButton active={activeTab === "funnel"} onClick={() => setActiveTab("funnel")} icon={TrendingDown} label="Funil" />
+           <TabButton active={activeTab === "nextsteps"} onClick={() => setActiveTab("nextsteps")} icon={ListChecks} label="Próximos Passos" />
         </div>
 
         <div className="relative" ref={dropdownRef}>
