@@ -59,6 +59,7 @@ export interface Client {
   expansionPotential: PotentialLevel | null;
   priceSensitivity: SensitivityLevel | null;
   // System
+  leadSource: string | null;
   assignedTo: string;
   createdAt: string;
   updatedAt: string;
