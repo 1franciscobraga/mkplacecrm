@@ -54,6 +54,7 @@ export type Database = {
           goals_and_expectations: Json
           id: string
           implementation_complexity: string | null
+          lead_source: string | null
           meeting_date: string | null
           meetings: Json
           next_contact_date: string | null
@@ -90,6 +91,7 @@ export type Database = {
           goals_and_expectations?: Json
           id: string
           implementation_complexity?: string | null
+          lead_source?: string | null
           meeting_date?: string | null
           meetings?: Json
           next_contact_date?: string | null
@@ -126,6 +128,7 @@ export type Database = {
           goals_and_expectations?: Json
           id?: string
           implementation_complexity?: string | null
+          lead_source?: string | null
           meeting_date?: string | null
           meetings?: Json
           next_contact_date?: string | null
