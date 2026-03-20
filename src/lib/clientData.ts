@@ -106,6 +106,7 @@ export const EMPTY_EXTRACTED_DATA: ExtractedData = {
   nextSteps: [],
   responsibleParties: null,
   nextContactDate: null,
+  leadSource: null,
   dealStage: "Lead demonstrou interesse",
   confidenceLevel: null,
   urgency: null,
