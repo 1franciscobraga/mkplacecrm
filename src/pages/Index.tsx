@@ -114,6 +114,8 @@ const Index = () => {
         <PipelineBoard clients={clients} onStageChange={handleStageChange} onClientClick={setSelectedClient} onEdit={handleEditClient} onDelete={setDeleteTarget} />
       ) : activeTab === "funnel" ? (
         <FunnelView clients={clients} onClientClick={setSelectedClient} />
+      ) : activeTab === "nextsteps" ? (
+        <NextStepsView clients={clients} onClientClick={setSelectedClient} />
       ) : (
         <ClientsTable clients={clients} onClientClick={setSelectedClient} onEdit={handleEditClient} onDelete={setDeleteTarget} />
       )}
