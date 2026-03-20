@@ -1,9 +1,10 @@
-import { useState, DragEvent } from "react";
+import { useState, useMemo, useCallback, DragEvent } from "react";
 import { Client, DEAL_STAGES, DealStage, STAGE_BADGE_STYLES } from "@/types/crm";
 import DealCard from "./DealCard";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { computeDealProbability, probabilityBg, probabilityColor } from "@/lib/dealProbability";
 import { Inbox, Building2, User, Zap, AlertTriangle, TrendingUp } from "lucide-react";
+import React from "react";
 
 interface PipelineBoardProps {
   clients: Client[];
@@ -39,7 +40,6 @@ function CompanyHoverCard({ client, onClientClick }: { client: Client; onClientC
         </button>
       </HoverCardTrigger>
       <HoverCardContent className="w-72 p-4" side="right" align="start">
-        {/* Header */}
         <div className="mb-3">
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -54,7 +54,6 @@ function CompanyHoverCard({ client, onClientClick }: { client: Client; onClientC
           </div>
         </div>
 
-        {/* Key fields */}
         <div className="space-y-1.5 mb-3">
           {client.contactName && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -78,7 +77,6 @@ function CompanyHoverCard({ client, onClientClick }: { client: Client; onClientC
           )}
         </div>
 
-        {/* Signals row */}
         {(client.urgency || client.risk) && (
           <div className="flex items-center gap-2 mb-3">
             {client.urgency && (
@@ -104,7 +102,6 @@ function CompanyHoverCard({ client, onClientClick }: { client: Client; onClientC
           </div>
         )}
 
-        {/* Probability breakdown */}
         <div className="border-t border-border pt-3 space-y-1.5">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mb-2">Probabilidade de fechamento</p>
           <div className="space-y-1">
@@ -127,39 +124,45 @@ function CompanyHoverCard({ client, onClientClick }: { client: Client; onClientC
   );
 }
 
+const MemoizedDealCard = React.memo(DealCard);
+
 const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete }: PipelineBoardProps) => {
   const [draggedClientId, setDraggedClientId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<DealStage | null>(null);
 
-  const handleDragOver = (e: DragEvent, stage: DealStage) => {
+  const stageGroups = useMemo(() => {
+    return DEAL_STAGES.map((stage) => {
+      const stageClients = clients.filter((c) => c.dealStage === stage);
+      const top5 = [...stageClients]
+        .sort((a, b) => computeDealProbability(b).overall - computeDealProbability(a).overall)
+        .slice(0, 5);
+      return { stage, stageClients, top5 };
+    });
+  }, [clients]);
+
+  const handleDragOver = useCallback((e: DragEvent, stage: DealStage) => {
     e.preventDefault();
     setDragOverStage(stage);
-  };
+  }, []);
 
-  const handleDrop = (e: DragEvent, stage: DealStage) => {
+  const handleDrop = useCallback((e: DragEvent, stage: DealStage) => {
     e.preventDefault();
     if (draggedClientId) {
       onStageChange(draggedClientId, stage);
     }
     setDraggedClientId(null);
     setDragOverStage(null);
-  };
+  }, [draggedClientId, onStageChange]);
 
-  const handleDragLeave = () => {
+  const handleDragLeave = useCallback(() => {
     setDragOverStage(null);
-  };
+  }, []);
 
   return (
-    <div className="flex gap-4 overflow-x-auto p-6 flex-1">
-      {DEAL_STAGES.map((stage) => {
-        const stageClients = clients.filter((c) => c.dealStage === stage);
+    <div className="flex gap-4 overflow-x-auto p-6 flex-1 min-w-0">
+      {stageGroups.map(({ stage, stageClients, top5 }) => {
         const isOver = dragOverStage === stage;
         const badge = STAGE_BADGE_STYLES[stage];
-
-        // Top 5 companies ranked by overall probability
-        const top5 = [...stageClients]
-          .sort((a, b) => computeDealProbability(b).overall - computeDealProbability(a).overall)
-          .slice(0, 5);
 
         return (
           <div
@@ -171,7 +174,6 @@ const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete
             onDrop={(e) => handleDrop(e, stage)}
             onDragLeave={handleDragLeave}
           >
-            {/* Stage header */}
             <div className="px-4 py-3 flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
               <h3 className="font-medium text-sm text-foreground">{stage}</h3>
@@ -180,7 +182,6 @@ const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete
               </span>
             </div>
 
-            {/* Top 5 companies */}
             {top5.length > 0 && (
               <div className="px-3 pb-2">
                 <div className="bg-card/70 rounded-lg px-2 pt-2 pb-1">
@@ -198,7 +199,6 @@ const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete
               </div>
             )}
 
-            {/* Deal cards */}
             <div className="flex-1 px-3 pb-3 space-y-3 overflow-y-auto max-h-[calc(100vh-380px)]">
               {stageClients.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
@@ -211,7 +211,7 @@ const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete
                 </div>
               ) : (
                 stageClients.map((client) => (
-                  <DealCard
+                  <MemoizedDealCard
                     key={client.id}
                     client={client}
                     onClick={() => onClientClick(client)}
