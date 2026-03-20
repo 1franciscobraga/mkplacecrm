@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Client, STAGE_BADGE_STYLES, DEAL_STAGES, DealStage, ComplexityLevel, PotentialLevel, SensitivityLevel } from "@/types/crm";
-import { X, Pencil, RotateCcw } from "lucide-react";
+import { X, Pencil, RotateCcw, AlertCircle, CheckCircle2, Clock, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ClientDrawerProps {
   client: Client | null;
