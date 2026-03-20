@@ -33,6 +33,12 @@ const DealCard = ({ client, onClick, onDragStart, onEdit, onDelete }: DealCardPr
   const badge = STAGE_BADGE_STYLES[client.dealStage];
   const prob = computeDealProbability(client);
 
+  const isOverdue = (() => {
+    if (!client.nextContactDate) return false;
+    const due = new Date(client.nextContactDate);
+    return due.getTime() < Date.now();
+  })();
+
   return (
     <div
       draggable
