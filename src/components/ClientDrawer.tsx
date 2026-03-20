@@ -40,6 +40,50 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
     if (draft) setDraft({ ...draft, [field]: value });
   };
 
+  const getStepStatus = () => {
+    if (!d.nextContactDate) return { status: "no_deadline" as const, label: "Sem prazo", color: "text-muted-foreground", bg: "bg-secondary", Icon: Clock };
+    const due = new Date(d.nextContactDate);
+    const diffDays = Math.ceil((due.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { status: "overdue" as const, label: "Atrasado", color: "text-red-700", bg: "bg-red-50", Icon: AlertCircle };
+    if (diffDays <= 3) return { status: "approaching" as const, label: "Próximo do vencimento", color: "text-amber-700", bg: "bg-amber-50", Icon: AlertTriangle };
+    return { status: "on_track" as const, label: "Em dia", color: "text-emerald-700", bg: "bg-emerald-50", Icon: CheckCircle2 };
+  };
+
+  const stepStatus = getStepStatus();
+
+  const handleAiSuggest = async () => {
+    setAiLoading(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke("suggest-next-step", {
+        body: {
+          clientName: client.clientName,
+          dealStage: client.dealStage,
+          nextSteps: client.nextSteps,
+          executiveSummary: client.executiveSummary,
+          meetingDate: client.meetingDate,
+          notes: client.notes,
+        },
+      });
+      if (error) throw error;
+      setAiSuggestion(result);
+    } catch (e) {
+      console.error("AI suggestion error:", e);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applyAiSuggestion = () => {
+    if (!aiSuggestion) return;
+    const newSteps = [...(d.nextSteps || []), aiSuggestion.nextStep];
+    if (editing && draft) {
+      setDraft({ ...draft, nextSteps: newSteps, nextContactDate: aiSuggestion.deadline });
+    } else {
+      onUpdate({ ...client, nextSteps: newSteps, nextContactDate: aiSuggestion.deadline });
+    }
+    setAiSuggestion(null);
+  };
+
   const badge = STAGE_BADGE_STYLES[d.dealStage];
 
   return (
