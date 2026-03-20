@@ -53,7 +53,8 @@ Return ONLY valid JSON with no markdown:
       "suggestedStage": "string or null — one of the 7 stage names if a stage change is evidenced",
       "urgency": "Baixa | Média | Alta — inferred from context",
       "responsible": "string or null — who should do it if mentioned",
-      "context": "string — brief summary of what was discussed about this company (1-2 sentences)"
+      "context": "string — brief summary of what was discussed about this company (1-2 sentences)",
+      "leadSource": "string or null — who or what originated this lead if mentioned (e.g. 'indicação do João', 'inbound', 'evento')"
     }
   ],
   "generalNotes": "string or null — any general observations not tied to a specific company"
