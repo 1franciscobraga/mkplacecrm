@@ -19,6 +19,7 @@ const Index = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+  const [meetingNotesOpen, setMeetingNotesOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
