@@ -141,6 +141,7 @@ export const normalizeExtractedData = (input?: Partial<ExtractedData> | null): E
     nextSteps: toStringArray(source.nextSteps),
     responsibleParties: toNullableString(source.responsibleParties),
     nextContactDate: toNullableString(source.nextContactDate),
+    leadSource: toNullableString(source.leadSource),
     dealStage: toDealStage(source.dealStage),
     confidenceLevel: toConfidence(source.confidenceLevel),
     urgency: toEnum(source.urgency, COMPLEXITY_OPTIONS),
