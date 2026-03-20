@@ -10,7 +10,8 @@ import NextStepsView from "@/components/NextStepsView";
 import ClientDrawer from "@/components/ClientDrawer";
 import TranscriptModal from "@/components/TranscriptModal";
 import ManualClientModal from "@/components/ManualClientModal";
-import { Plus, LayoutGrid, Table, FileText, PenLine, ChevronDown, TrendingDown, ListChecks } from "lucide-react";
+import MeetingNotesModal from "@/components/MeetingNotesModal";
+import { Plus, LayoutGrid, Table, FileText, PenLine, ChevronDown, TrendingDown, ListChecks, ClipboardList } from "lucide-react";
 
 const Index = () => {
   const [clients, setClients] = useState<Client[]>([]);
