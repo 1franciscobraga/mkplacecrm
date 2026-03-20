@@ -12,6 +12,8 @@ interface ClientDrawerProps {
 const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Client | null>(null);
+  const [aiSuggestion, setAiSuggestion] = useState<{ nextStep: string; deadline: string } | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   if (!client) return null;
 
