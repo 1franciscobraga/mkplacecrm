@@ -321,12 +321,10 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
                 </div>
 
                 {/* Revenue estimate */}
-                {m.revenue > 0 && (
-                  <p style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>
-                    Rec. est.:&nbsp;
-                    <span style={{ fontWeight: 700, color: "#475569" }}>{fmtCurrency(m.revenue)}</span>
-                  </p>
-                )}
+                <p style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>
+                  Rec. est.:&nbsp;
+                  <span style={{ fontWeight: 700, color: "#475569" }}>TBD</span>
+                </p>
               </div>
             ))}
           </div>
