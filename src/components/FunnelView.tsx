@@ -361,8 +361,8 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <KpiCard icon={<Users    size={14} />} label="Total de Leads"   value={String(totalLeads)}        accent="#2563eb" />
             <KpiCard icon={<TrendingUp size={14} />} label="Conversão Geral" value={`${overallConv}%`}        accent="#059669" />
-            <KpiCard icon={<DollarSign size={14} />} label="Receita Estimada" value={fmtCurrency(totalRevenue)} accent="#7c3aed" />
-            <KpiCard icon={<Target   size={14} />} label="Ticket Médio"     value={fmtCurrency(avgTicket)}    accent="#d97706" />
+            <KpiCard icon={<DollarSign size={14} />} label="Receita Estimada" value="TBD" accent="#7c3aed" />
+            <KpiCard icon={<Target   size={14} />} label="Ticket Médio"     value="TBD"    accent="#d97706" />
           </div>
         </div>
 
