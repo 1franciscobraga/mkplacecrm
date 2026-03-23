@@ -4,6 +4,7 @@ import { computeDealProbability } from "@/lib/dealProbability";
 import { Users, DollarSign, TrendingUp, Target } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { stageLabel, STAGE_SHORT } from "@/lib/i18n";
+import CompanyLogo from "@/components/CompanyLogo";
 
 // ─── Geometry ──────────────────────────────────────────────────────────────────
 const N       = DEAL_STAGES.length;
@@ -223,10 +224,15 @@ export default function FunnelView({ clients, onClientClick }: { clients: Client
                             </TooltipTrigger>
                             <TooltipContent side="right" sideOffset={12} className="max-w-xs p-3 z-[100]">
                               <div className="space-y-1.5">
-                                <p className="font-bold text-sm text-foreground">{c.clientName}</p>
-                                {c.projectName && (
-                                  <p className="text-xs text-muted-foreground">{c.projectName}</p>
-                                )}
+                                <div className="flex items-center gap-2.5">
+                                  <CompanyLogo logoUrl={c.logoUrl} companyName={c.clientName} size={28} />
+                                  <div>
+                                    <p className="font-bold text-sm text-foreground">{c.clientName}</p>
+                                    {c.projectName && (
+                                      <p className="text-xs text-muted-foreground">{c.projectName}</p>
+                                    )}
+                                  </div>
+                                </div>
                                 <div className="flex items-center gap-2 text-xs">
                                   <span className="text-muted-foreground">Deal:</span>
                                   <span className="font-semibold text-foreground">{c.dealValue || "—"}</span>

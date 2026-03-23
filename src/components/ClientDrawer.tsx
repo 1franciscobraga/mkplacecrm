@@ -3,6 +3,7 @@ import { Client, STAGE_BADGE_STYLES, DEAL_STAGES, DealStage, ComplexityLevel, Po
 import { X, Pencil, RotateCcw, AlertCircle, CheckCircle2, Clock, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { stageLabel, complexityLabel, potentialLabel, sensitivityLabel } from "@/lib/i18n";
+import CompanyLogo from "@/components/CompanyLogo";
 
 interface ClientDrawerProps {
   client: Client | null;
@@ -94,9 +95,12 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
         <div className="p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
-            <div>
-              <h2 className="font-semibold text-lg text-foreground">{d.clientName}</h2>
-              <p className="text-sm text-muted-foreground">{d.projectName || "—"}</p>
+            <div className="flex items-center gap-3">
+              <CompanyLogo logoUrl={d.logoUrl} companyName={d.clientName} size={48} />
+              <div>
+                <h2 className="font-semibold text-lg text-foreground">{d.clientName}</h2>
+                <p className="text-sm text-muted-foreground">{d.projectName || "—"}</p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {editing ? (
@@ -125,6 +129,7 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                 <ReadOrEdit editing={editing} label="Project / Internal Name" value={d.projectName} onChange={(v) => set("projectName", v || null)} />
                 <ReadOrEdit editing={editing} label="Meeting Date" value={d.meetingDate} onChange={(v) => set("meetingDate", v || null)} type="date" />
                 <ReadOrEdit editing={editing} label="Business Model" value={d.businessModel} onChange={(v) => set("businessModel", v || null)} />
+                <ReadOrEdit editing={editing} label="Logo URL" value={d.logoUrl} onChange={(v) => set("logoUrl", v || null)} />
               </div>
 
               <SectionHeader label="Primary Contact" />

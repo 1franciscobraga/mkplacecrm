@@ -60,6 +60,7 @@ export interface Client {
   priceSensitivity: SensitivityLevel | null;
   // System
   leadSource: string | null;
+  logoUrl: string | null;
   assignedTo: string;
   createdAt: string;
   updatedAt: string;

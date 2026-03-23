@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Client, STAGE_BADGE_STYLES } from "@/types/crm";
 import { GripVertical, MoreVertical, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { computeDealProbability, probabilityBg } from "@/lib/dealProbability";
+import CompanyLogo from "@/components/CompanyLogo";
 
 interface DealCardProps {
   client: Client;
@@ -48,9 +49,7 @@ const DealCard = ({ client, onClick, onDragStart, onEdit, onDelete }: DealCardPr
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-semibold text-muted-foreground">{initials}</span>
-          </div>
+          <CompanyLogo logoUrl={client.logoUrl} companyName={client.clientName} size={32} className="rounded-full" />
           <div className="min-w-0">
             <p className="font-semibold text-sm text-foreground truncate">{client.clientName}</p>
             {client.projectName && (
