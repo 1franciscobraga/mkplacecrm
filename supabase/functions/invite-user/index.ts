@@ -70,7 +70,7 @@ serve(async (req) => {
     // New user — send invite
     const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
       email.toLowerCase().trim(),
-      { redirectTo: Deno.env.get("SUPABASE_URL")?.replace(".supabase.co", ".lovable.app") || "" }
+      { redirectTo: "https://mkplacecrm.lovable.app" }
     );
 
     if (inviteError) {
