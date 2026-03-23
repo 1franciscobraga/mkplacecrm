@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Send, ArrowLeft, Loader2, CheckCircle, Clock, UserPlus, Lock } from "lucide-react";
+import { Plus, Trash2, Send, ArrowLeft, Loader2, CheckCircle, Clock, UserPlus, Lock, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
 const ADMIN_PASSWORD = "scala2026";
@@ -16,6 +16,19 @@ interface AuthorizedEmail {
   added_by: string | null;
 }
 
+interface AccessSummary {
+  user_email: string;
+  access_count: number;
+  first_access: string;
+  last_access: string;
+}
+
+interface AccessLog {
+  id: string;
+  accessed_at: string;
+  user_agent: string | null;
+}
+
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
@@ -25,6 +38,10 @@ const Admin = () => {
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [inviting, setInviting] = useState<string | null>(null);
+  const [accessSummaries, setAccessSummaries] = useState<Map<string, AccessSummary>>(new Map());
+  const [expandedEmail, setExpandedEmail] = useState<string | null>(null);
+  const [accessHistory, setAccessHistory] = useState<AccessLog[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,18 +66,64 @@ const Admin = () => {
       .from("authorized_emails")
       .select("*")
       .order("created_at", { ascending: false });
-    if (error) {
-      console.error("Error fetching emails:", error);
-    }
+    if (error) console.error("Error fetching emails:", error);
     setEmails((data as unknown as AuthorizedEmail[]) || []);
     setLoading(false);
+  };
+
+  const fetchAccessSummaries = async () => {
+    const { data, error } = await supabase
+      .from("access_logs")
+      .select("user_email, accessed_at")
+      .order("accessed_at", { ascending: true });
+
+    if (error || !data) return;
+
+    const summaries = new Map<string, AccessSummary>();
+    for (const row of data as any[]) {
+      const email = row.user_email;
+      const existing = summaries.get(email);
+      if (existing) {
+        existing.access_count++;
+        existing.last_access = row.accessed_at;
+      } else {
+        summaries.set(email, {
+          user_email: email,
+          access_count: 1,
+          first_access: row.accessed_at,
+          last_access: row.accessed_at,
+        });
+      }
+    }
+    setAccessSummaries(summaries);
   };
 
   useEffect(() => {
     if (authenticated) {
       fetchEmails();
+      fetchAccessSummaries();
     }
   }, [authenticated]);
+
+  const fetchHistory = async (email: string) => {
+    if (expandedEmail === email) {
+      setExpandedEmail(null);
+      return;
+    }
+    setLoadingHistory(true);
+    setExpandedEmail(email);
+
+    const { data, error } = await supabase
+      .from("access_logs")
+      .select("id, accessed_at, user_agent")
+      .eq("user_email", email)
+      .order("accessed_at", { ascending: false })
+      .limit(20);
+
+    if (error) console.error("History error:", error);
+    setAccessHistory((data as unknown as AccessLog[]) || []);
+    setLoadingHistory(false);
+  };
 
   const sendInvite = async (email: string) => {
     setInviting(email);
@@ -112,8 +175,6 @@ const Admin = () => {
     setNewEmail("");
     await fetchEmails();
     toast.success(`${email} added. Sending invite...`);
-
-    // Auto-send invite after adding
     await sendInvite(email);
     setAdding(false);
   };
@@ -127,6 +188,19 @@ const Admin = () => {
     }
     await fetchEmails();
     toast.success(`${email} removed.`);
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+  };
+
+  const parseDevice = (ua: string | null) => {
+    if (!ua) return "Unknown";
+    if (/Mobile|Android|iPhone/i.test(ua)) return "Mobile";
+    if (/Tablet|iPad/i.test(ua)) return "Tablet";
+    return "Desktop";
   };
 
   // Password gate
@@ -148,7 +222,7 @@ const Admin = () => {
               autoFocus
               required
             />
-            {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
+            {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
             <Button type="submit" className="w-full">Enter</Button>
           </form>
           <div className="text-center mt-4">
@@ -170,7 +244,7 @@ const Admin = () => {
           Lock Admin
         </button>
       </nav>
-      <div className="flex-1 p-6 max-w-3xl mx-auto w-full">
+      <div className="flex-1 p-6 max-w-4xl mx-auto w-full">
         <div className="flex items-center gap-3 mb-6">
           <a href="/" className="p-2 rounded-lg hover:bg-secondary transition-colors">
             <ArrowLeft className="w-4 h-4 text-muted-foreground" />
@@ -178,7 +252,7 @@ const Admin = () => {
           <div>
             <h1 className="text-lg font-bold text-foreground">Access Management</h1>
             <p className="text-sm text-muted-foreground">
-              Add investor emails to send them a magic link invite. Only invited users can access the CRM.
+              Add investor emails to send them a magic link invite. Track access activity below.
             </p>
           </div>
         </div>
@@ -205,10 +279,12 @@ const Admin = () => {
         {/* Email list */}
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border bg-secondary/30">
-            <div className="grid grid-cols-[1fr_100px_120px_80px] gap-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <div className="grid grid-cols-[1fr_80px_70px_110px_110px_80px] gap-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               <span>Email</span>
               <span>Status</span>
-              <span>Invited</span>
+              <span className="text-center">Views</span>
+              <span>First Access</span>
+              <span>Last Access</span>
               <span className="text-right">Actions</span>
             </div>
           </div>
@@ -223,55 +299,98 @@ const Admin = () => {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {emails.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="grid grid-cols-[1fr_100px_120px_80px] gap-4 items-center px-4 py-3 hover:bg-secondary/20 transition-colors"
-                >
-                  <span className="text-sm font-medium text-foreground truncate">{entry.email}</span>
-                  <span className="flex items-center gap-1.5">
-                    {entry.status === "invited" ? (
-                      <>
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-xs text-emerald-600 font-medium">Invited</span>
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="w-3.5 h-3.5 text-amber-500" />
-                        <span className="text-xs text-amber-600 font-medium">Pending</span>
-                      </>
+              {emails.map((entry) => {
+                const summary = accessSummaries.get(entry.email);
+                const isExpanded = expandedEmail === entry.email;
+
+                return (
+                  <div key={entry.id}>
+                    <div
+                      className="grid grid-cols-[1fr_80px_70px_110px_110px_80px] gap-3 items-center px-4 py-3 hover:bg-secondary/20 transition-colors cursor-pointer"
+                      onClick={() => fetchHistory(entry.email)}
+                    >
+                      <span className="text-sm font-medium text-foreground truncate flex items-center gap-1.5">
+                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+                        {entry.email}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        {entry.status === "invited" ? (
+                          <>
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                            <span className="text-xs text-emerald-600 font-medium">Invited</span>
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="w-3.5 h-3.5 text-amber-500" />
+                            <span className="text-xs text-amber-600 font-medium">Pending</span>
+                          </>
+                        )}
+                      </span>
+                      <span className="text-center">
+                        {summary ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-foreground bg-secondary px-2 py-0.5 rounded-full">
+                            <Eye className="w-3 h-3" />
+                            {summary.access_count}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {summary ? formatDate(summary.first_access) : "—"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {summary ? formatDate(summary.last_access) : "—"}
+                      </span>
+                      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => sendInvite(entry.email)}
+                          disabled={inviting === entry.email}
+                          className="p-1.5 rounded-md hover:bg-secondary transition-colors disabled:opacity-50"
+                          title="Resend invite"
+                        >
+                          {inviting === entry.email ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                          ) : (
+                            <Send className="w-3.5 h-3.5 text-muted-foreground" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleRemove(entry.id, entry.email)}
+                          className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"
+                          title="Remove"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expanded access history */}
+                    {isExpanded && (
+                      <div className="bg-secondary/10 border-t border-border px-6 py-3">
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Recent Access History</h4>
+                        {loadingHistory ? (
+                          <div className="flex items-center gap-2 py-2">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">Loading...</span>
+                          </div>
+                        ) : accessHistory.length === 0 ? (
+                          <p className="text-xs text-muted-foreground py-2">No access records yet.</p>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {accessHistory.map((log) => (
+                              <div key={log.id} className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <span className="font-medium text-foreground">{formatDate(log.accessed_at)}</span>
+                                <span className="bg-secondary px-2 py-0.5 rounded text-[10px]">{parseDevice(log.user_agent)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     )}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {entry.invited_at
-                      ? new Date(entry.invited_at).toLocaleDateString("en-US", {
-                          month: "short", day: "numeric", year: "numeric",
-                        })
-                      : "—"}
-                  </span>
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() => sendInvite(entry.email)}
-                      disabled={inviting === entry.email}
-                      className="p-1.5 rounded-md hover:bg-secondary transition-colors disabled:opacity-50"
-                      title="Resend invite"
-                    >
-                      {inviting === entry.email ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-                      ) : (
-                        <Send className="w-3.5 h-3.5 text-muted-foreground" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleRemove(entry.id, entry.email)}
-                      className="p-1.5 rounded-md hover:bg-red-50 transition-colors"
-                      title="Remove"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
