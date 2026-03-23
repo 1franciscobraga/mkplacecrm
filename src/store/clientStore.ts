@@ -1,6 +1,7 @@
 import { Client, DealStage } from "@/types/crm";
 import { normalizeClient } from "@/lib/clientData";
 import { supabase } from "@/integrations/supabase/client";
+import { getAutoLogoUrl } from "@/lib/companyLogo";
 
 // ── Mapping helpers: DB row ↔ Client ──
 
