@@ -122,9 +122,9 @@ export default function FunnelView({ clients, onClientClick }: { clients: Client
                     gap: 0,
                   }}
                 >
-                  {logos.length > 0 ? (
+              {logos.filter(c => !!c.logoUrl).length > 0 ? (
                     <div style={{ display: "flex", alignItems: "center" }}>
-                      {logos.map((c, li) => (
+                      {logos.filter(c => !!c.logoUrl).map((c, li) => (
                         <TooltipProvider key={c.id} delayDuration={120}>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -143,21 +143,15 @@ export default function FunnelView({ clients, onClientClick }: { clients: Client
                                   justifyContent: "center",
                                   marginLeft: li > 0 ? -8 : 0,
                                   position: "relative",
-                                  zIndex: logos.length - li,
+                                  zIndex: logos.filter(c => !!c.logoUrl).length - li,
                                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                                   transition: "transform 0.15s, box-shadow 0.15s",
                                   flexShrink: 0,
                                 }}
                                 onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.15)"; e.currentTarget.style.zIndex = "20"; e.currentTarget.style.boxShadow = "0 3px 8px rgba(0,0,0,0.15)"; }}
-                                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.zIndex = String(logos.length - li); e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.zIndex = String(logos.filter(c => !!c.logoUrl).length - li); e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)"; }}
                               >
-                                {c.logoUrl ? (
-                                  <img src={c.logoUrl} alt={c.clientName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                                ) : (
-                                  <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8" }}>
-                                    {c.clientName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
-                                  </span>
-                                )}
+                                <img src={c.logoUrl!} alt={c.clientName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent side="left" sideOffset={8} className="max-w-xs p-3 z-[100]">
