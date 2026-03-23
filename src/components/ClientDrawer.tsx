@@ -129,7 +129,40 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                 <ReadOrEdit editing={editing} label="Project / Internal Name" value={d.projectName} onChange={(v) => set("projectName", v || null)} />
                 <ReadOrEdit editing={editing} label="Meeting Date" value={d.meetingDate} onChange={(v) => set("meetingDate", v || null)} type="date" />
                 <ReadOrEdit editing={editing} label="Business Model" value={d.businessModel} onChange={(v) => set("businessModel", v || null)} />
-                <ReadOrEdit editing={editing} label="Logo URL" value={d.logoUrl} onChange={(v) => set("logoUrl", v || null)} />
+              </div>
+
+              <div className="rounded-lg border border-border bg-secondary/30 p-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Company Logo URL</p>
+                <div className="flex items-center gap-3">
+                  <CompanyLogo logoUrl={d.logoUrl} companyName={d.clientName} size={40} />
+                  <div className="flex-1 min-w-0">
+                    {editing ? (
+                      <input
+                        type="url"
+                        value={d.logoUrl || ""}
+                        onChange={(e) => set("logoUrl", e.target.value || null)}
+                        placeholder="https://..."
+                        className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary focus:shadow-input-focus transition-all"
+                      />
+                    ) : (
+                      <p className="text-sm text-foreground break-all">{d.logoUrl || "No logo assigned"}</p>
+                    )}
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {editing
+                        ? "Paste a valid logo URL, or clear it to remove."
+                        : "Use Edit mode to manually set, replace, or remove the logo URL."}
+                    </p>
+                  </div>
+                  {editing && (
+                    <button
+                      type="button"
+                      onClick={() => set("logoUrl", null)}
+                      className="h-8 px-3 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
 
               <SectionHeader label="Primary Contact" />
