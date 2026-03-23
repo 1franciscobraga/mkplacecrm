@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Client, STAGE_BADGE_STYLES } from "@/types/crm";
 import { GripVertical, MoreVertical, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { computeDealProbability, probabilityBg } from "@/lib/dealProbability";
+import CompanyLogo from "@/components/CompanyLogo";
 
 interface DealCardProps {
   client: Client;
