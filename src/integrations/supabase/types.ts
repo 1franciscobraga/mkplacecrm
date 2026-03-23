@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_logs: {
+        Row: {
+          accessed_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_email: string
+        }
+        Insert: {
+          accessed_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_email: string
+        }
+        Update: {
+          accessed_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_email?: string
+        }
+        Relationships: []
+      }
       authorized_emails: {
         Row: {
           added_by: string | null
