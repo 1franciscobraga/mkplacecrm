@@ -16,19 +16,28 @@ export type Database = {
     Tables: {
       authorized_emails: {
         Row: {
+          added_by: string | null
           created_at: string
           email: string
           id: string
+          invited_at: string | null
+          status: string
         }
         Insert: {
+          added_by?: string | null
           created_at?: string
           email: string
           id?: string
+          invited_at?: string | null
+          status?: string
         }
         Update: {
+          added_by?: string | null
           created_at?: string
           email?: string
           id?: string
+          invited_at?: string | null
+          status?: string
         }
         Relationships: []
       }
