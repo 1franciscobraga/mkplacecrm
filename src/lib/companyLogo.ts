@@ -118,7 +118,7 @@ export function getAutoLogoUrl(companyName: string): string | null {
   if (!companyName || companyName.trim().length === 0) return null;
   const domain = guessDomain(companyName);
   if (!domain) return null;
-  return `https://logo.clearbit.com/${domain}`;
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 }
 
 /**
