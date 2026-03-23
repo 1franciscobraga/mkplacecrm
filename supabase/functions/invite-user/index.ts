@@ -29,11 +29,13 @@ serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Check if email is in the whitelist
     const { data: whitelisted } = await supabase
       .from("authorized_emails")
       .select("id")
-      .eq("email", email.toLowerCase().trim())
+      .eq("email", normalizedEmail)
       .maybeSingle();
 
     if (!whitelisted) {
@@ -46,19 +48,25 @@ serve(async (req) => {
     // Check if user already exists in auth
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
     const existingUser = existingUsers?.users?.find(
-      (u) => u.email?.toLowerCase() === email.toLowerCase().trim()
+      (u) => u.email?.toLowerCase() === normalizedEmail
     );
 
+    const redirectTo = "https://vladcrm.lovable.app";
+
     if (existingUser) {
-      // User exists — send magic link instead of invite
-      const { error: otpError } = await supabase.auth.admin.generateLink({
+      // User exists — generate magic link
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
         type: "magiclink",
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
+        options: { redirectTo },
       });
 
-      if (otpError) {
-        console.error("Magic link error:", otpError);
-        // Still return success — the user exists and can use login page
+      if (linkError) {
+        console.error("Magic link error:", linkError);
+        return new Response(
+          JSON.stringify({ error: linkError.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
 
       return new Response(
@@ -69,8 +77,8 @@ serve(async (req) => {
 
     // New user — send invite
     const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
-      email.toLowerCase().trim(),
-      { redirectTo: "https://mkplacecrm.lovable.app" }
+      normalizedEmail,
+      { redirectTo }
     );
 
     if (inviteError) {

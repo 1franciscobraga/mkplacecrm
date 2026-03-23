@@ -7,14 +7,13 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Login from "./pages/Login.tsx";
-import Unauthorized from "./pages/Unauthorized.tsx";
 import Admin from "./pages/Admin.tsx";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoutes() {
-  const { session, isAuthorized, loading } = useAuth();
+  const { session, loading } = useAuth();
 
   if (loading) {
     return (
@@ -25,7 +24,6 @@ function ProtectedRoutes() {
   }
 
   if (!session) return <Login />;
-  if (isAuthorized === false) return <Unauthorized />;
 
   return (
     <Routes>
