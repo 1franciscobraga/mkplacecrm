@@ -53,6 +53,30 @@ function fmtCurrency(v: number): string {
   return `R$${v.toFixed(0)}`;
 }
 
+const KNOWN_GENERIC_FAVICON_DOMAINS = new Set([
+  "allu.com.br",
+  "dfranciscausa.com",
+  "trademaster.com.br",
+]);
+
+function extractDomainFromGoogleFaviconUrl(url: string): string | null {
+  if (!url.includes("google.com/s2/favicons")) return null;
+  try {
+    const parsed = new URL(url);
+    const domain = parsed.searchParams.get("domain");
+    return domain ? domain.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
+function shouldShowFunnelLogo(client: Client): boolean {
+  if (!client.logoUrl) return false;
+  const domain = extractDomainFromGoogleFaviconUrl(client.logoUrl);
+  if (domain && KNOWN_GENERIC_FAVICON_DOMAINS.has(domain)) return false;
+  return true;
+}
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function FunnelView({ clients, onClientClick }: { clients: Client[]; onClientClick: (client: Client) => void }) {
   const stageData = useMemo(() => {
@@ -111,6 +135,7 @@ export default function FunnelView({ clients, onClientClick }: { clients: Client
           <div style={{ display: "flex", flexDirection: "column", height: SVG_H, flexShrink: 0, width: 160, marginRight: 20 }}>
             {stageData.map((m, i) => {
               const logos = m.top5.slice(0, 3);
+              const validLogos = logos.filter(shouldShowFunnelLogo);
               return (
                 <div
                   key={m.stage}
@@ -122,9 +147,9 @@ export default function FunnelView({ clients, onClientClick }: { clients: Client
                     gap: 0,
                   }}
                 >
-              {logos.filter(c => !!c.logoUrl).length > 0 ? (
+              {validLogos.length > 0 ? (
                     <div style={{ display: "flex", alignItems: "center" }}>
-                      {logos.filter(c => !!c.logoUrl).map((c, li) => (
+                      {validLogos.map((c, li) => (
                         <TooltipProvider key={c.id} delayDuration={120}>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -143,13 +168,13 @@ export default function FunnelView({ clients, onClientClick }: { clients: Client
                                   justifyContent: "center",
                                   marginLeft: li > 0 ? -8 : 0,
                                   position: "relative",
-                                  zIndex: logos.filter(c => !!c.logoUrl).length - li,
+                                  zIndex: validLogos.length - li,
                                   boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                                   transition: "transform 0.15s, box-shadow 0.15s",
                                   flexShrink: 0,
                                 }}
                                 onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.15)"; e.currentTarget.style.zIndex = "20"; e.currentTarget.style.boxShadow = "0 3px 8px rgba(0,0,0,0.15)"; }}
-                                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.zIndex = String(logos.filter(c => !!c.logoUrl).length - li); e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.zIndex = String(validLogos.length - li); e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)"; }}
                               >
                                 <img src={c.logoUrl!} alt={c.clientName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                               </button>
