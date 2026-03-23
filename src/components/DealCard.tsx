@@ -96,10 +96,11 @@ const DealCard = ({ client, onClick, onDragStart, onEdit, onDelete }: DealCardPr
 
       <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-1.5">
-          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.bg} ${badge.text}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
-            {client.dealStage}
-          </span>
+          {client.leadSource && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-secondary text-muted-foreground">
+              {client.leadSource}
+            </span>
+          )}
           {isOverdue && (
             <span className="flex items-center gap-1 text-[10px] font-medium text-red-600" title="Próximo passo atrasado">
               <AlertCircle className="w-3.5 h-3.5" />
