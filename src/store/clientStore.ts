@@ -101,8 +101,12 @@ export async function getClients(): Promise<Client[]> {
 }
 
 export async function addClient(client: Client): Promise<void> {
+  // Auto-fill logo if not manually set
+  const logoUrl = client.logoUrl || getAutoLogoUrl(client.clientName);
+
   const normalized = normalizeClient({
     ...client,
+    logoUrl,
     updatedAt: new Date().toISOString(),
   });
   console.log("Saving client object:", JSON.stringify(normalized, null, 2));
