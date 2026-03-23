@@ -24,7 +24,12 @@ const CompanyLogo = ({ logoUrl, companyName, size = 40, className = "" }: Compan
 
   const showImage = logoUrl && !imgError;
 
-  if (showImage) {
+  // If no valid logo URL, render nothing (no placeholder/initials)
+  if (!showImage) {
+    return null;
+  }
+
+  return (
     return (
       <div
         className={`flex-shrink-0 rounded-lg overflow-hidden bg-secondary flex items-center justify-center ${className}`}
