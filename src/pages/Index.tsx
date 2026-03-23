@@ -31,6 +31,12 @@ const Index = () => {
         prev ? updated.find((c) => c.id === prev.id) ?? null : null
       );
     });
+
+    // One-time backfill: fetch real logos for clients missing them
+    backfillLogos().then((count) => {
+      if (count > 0) console.log(`Backfilled logos for ${count} clients`);
+    });
+
     return unsubscribe;
   }, []);
 
