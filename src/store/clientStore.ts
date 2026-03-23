@@ -84,6 +84,24 @@ const clientToRow = (client: Client) => ({
   updated_at: client.updatedAt,
 });
 
+// ── Logo fetching via AI ──
+
+async function fetchRealLogo(companyName: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("fetch-company-logo", {
+      body: { companyName },
+    });
+    if (error) {
+      console.warn("Logo fetch error:", error);
+      return getAutoLogoUrl(companyName);
+    }
+    return data?.logoUrl || getAutoLogoUrl(companyName);
+  } catch (e) {
+    console.warn("Logo fetch failed, using fallback:", e);
+    return getAutoLogoUrl(companyName);
+  }
+}
+
 // ── Public API ──
 
 export async function getClients(): Promise<Client[]> {
@@ -101,8 +119,11 @@ export async function getClients(): Promise<Client[]> {
 }
 
 export async function addClient(client: Client): Promise<void> {
-  // Auto-fill logo if not manually set
-  const logoUrl = client.logoUrl || getAutoLogoUrl(client.clientName);
+  // Use existing logo, or fetch real logo via AI, or use static fallback
+  let logoUrl = client.logoUrl;
+  if (!logoUrl) {
+    logoUrl = await fetchRealLogo(client.clientName);
+  }
 
   const normalized = normalizeClient({
     ...client,
@@ -117,8 +138,11 @@ export async function addClient(client: Client): Promise<void> {
 }
 
 export async function updateClient(updated: Client): Promise<void> {
-  // Auto-fill logo if not manually set
-  const logoUrl = updated.logoUrl || getAutoLogoUrl(updated.clientName);
+  // Only fetch logo if none exists
+  let logoUrl = updated.logoUrl;
+  if (!logoUrl) {
+    logoUrl = await fetchRealLogo(updated.clientName);
+  }
 
   const normalized = normalizeClient({
     ...updated,
@@ -145,6 +169,35 @@ export async function updateClientStage(clientId: string, stage: DealStage): Pro
 export async function deleteClient(clientId: string): Promise<void> {
   const { error } = await supabase.from("clients").delete().eq("id", clientId);
   if (error) console.error("Error deleting client:", error);
+}
+
+/**
+ * Backfill logos for all clients that don't have one.
+ * Fetches real logos via AI for each client sequentially.
+ */
+export async function backfillLogos(): Promise<number> {
+  const clients = await getClients();
+  const needsLogo = clients.filter((c) => !c.logoUrl);
+
+  if (needsLogo.length === 0) return 0;
+
+  let updated = 0;
+  for (const client of needsLogo) {
+    try {
+      const logoUrl = await fetchRealLogo(client.clientName);
+      if (logoUrl) {
+        const { error } = await supabase
+          .from("clients")
+          .update({ logo_url: logoUrl })
+          .eq("id", client.id);
+        if (!error) updated++;
+      }
+    } catch (e) {
+      console.warn(`Failed to fetch logo for ${client.clientName}:`, e);
+    }
+  }
+
+  return updated;
 }
 
 // ── Realtime subscription ──

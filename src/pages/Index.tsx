@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Client, DealStage } from "@/types/crm";
-import { addClient, updateClient, updateClientStage, deleteClient, subscribeToClients } from "@/store/clientStore";
+import { addClient, updateClient, updateClientStage, deleteClient, subscribeToClients, backfillLogos } from "@/store/clientStore";
 import Navbar from "@/components/Navbar";
 import StatsBar from "@/components/StatsBar";
 import PipelineBoard from "@/components/PipelineBoard";
@@ -31,6 +31,12 @@ const Index = () => {
         prev ? updated.find((c) => c.id === prev.id) ?? null : null
       );
     });
+
+    // One-time backfill: fetch real logos for clients missing them
+    backfillLogos().then((count) => {
+      if (count > 0) console.log(`Backfilled logos for ${count} clients`);
+    });
+
     return unsubscribe;
   }, []);
 
