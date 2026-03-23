@@ -39,7 +39,7 @@ serve(async (req) => {
           {
             role: "system",
             content: `You are a company domain resolver. Given a company name, return ONLY the company's official website domain (e.g., "apple.com", "ifood.com.br", "btgpactual.com"). 
-Return ONLY the domain string, nothing else. No explanation, no protocol, no quotes.
+Return ONLY the domain string, nothing else. No explanation, no protocol, no quotes, no www prefix.
 If it's a Brazilian company, prefer .com.br domains when applicable.
 If you cannot determine the domain with confidence, return "UNKNOWN".`,
           },
@@ -52,6 +52,18 @@ If you cannot determine the domain with confidence, return "UNKNOWN".`,
     });
 
     if (!aiResponse.ok) {
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "Credits exhausted. Please add credits to your workspace." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       console.error("AI gateway error:", aiResponse.status);
       throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
@@ -66,7 +78,7 @@ If you cannot determine the domain with confidence, return "UNKNOWN".`,
       );
     }
 
-    // Clean domain (remove any protocol, quotes, trailing punctuation)
+    // Clean domain
     const cleanDomain = domain
       .replace(/^https?:\/\//, "")
       .replace(/^www\./, "")
@@ -74,40 +86,43 @@ If you cannot determine the domain with confidence, return "UNKNOWN".`,
       .replace(/\/$/, "")
       .trim();
 
-    // Step 2: Build Clearbit logo URL
-    const clearbitUrl = `https://logo.clearbit.com/${cleanDomain}`;
+    // Step 2: Use Google Favicon API (reliable, returns real favicons at 128px)
+    const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${cleanDomain}&sz=128`;
 
-    // Step 3: Validate the logo actually exists by doing a HEAD request
     try {
-      const logoCheck = await fetch(clearbitUrl, { method: "HEAD" });
-      if (logoCheck.ok) {
+      const faviconCheck = await fetch(googleFaviconUrl, { method: "GET" });
+      if (faviconCheck.ok && faviconCheck.status === 200) {
+        // Check content length - the default "globe" icon for unknown domains is ~726 bytes
+        const body = await faviconCheck.arrayBuffer();
+        if (body.byteLength > 750) {
+          // Real favicon found
+          return new Response(
+            JSON.stringify({ logoUrl: googleFaviconUrl, domain: cleanDomain }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+    } catch (e) {
+      console.log("Google favicon check failed:", e);
+    }
+
+    // Step 3: Fallback - try Clearbit
+    const clearbitUrl = `https://logo.clearbit.com/${cleanDomain}`;
+    try {
+      const clearbitCheck = await fetch(clearbitUrl, { method: "HEAD" });
+      if (clearbitCheck.ok) {
         return new Response(
           JSON.stringify({ logoUrl: clearbitUrl, domain: cleanDomain }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
     } catch (e) {
-      console.log("Clearbit check failed, trying Google favicon:", e);
+      console.log("Clearbit check failed:", e);
     }
 
-    // Step 4: Fallback to Google favicon API (higher resolution)
-    const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${cleanDomain}&sz=128`;
-
-    try {
-      const faviconCheck = await fetch(googleFaviconUrl, { method: "HEAD" });
-      if (faviconCheck.ok) {
-        return new Response(
-          JSON.stringify({ logoUrl: googleFaviconUrl, domain: cleanDomain }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    } catch (e) {
-      console.log("Google favicon check failed:", e);
-    }
-
-    // Nothing found
+    // Nothing valid found
     return new Response(
-      JSON.stringify({ logoUrl: null, domain: cleanDomain, reason: "Logo not found for domain" }),
+      JSON.stringify({ logoUrl: null, domain: cleanDomain, reason: "No valid logo found for domain" }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
