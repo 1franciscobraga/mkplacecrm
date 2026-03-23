@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import Navbar from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Send, ArrowLeft, Loader2, CheckCircle, Clock, UserPlus } from "lucide-react";
+import { Plus, Trash2, Send, ArrowLeft, Loader2, CheckCircle, Clock, UserPlus, Lock } from "lucide-react";
 import { toast } from "sonner";
+
+const ADMIN_PASSWORD = "scala2026";
 
 interface AuthorizedEmail {
   id: string;
@@ -17,29 +17,50 @@ interface AuthorizedEmail {
 }
 
 const Admin = () => {
-  const { user } = useAuth();
+  const [authenticated, setAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [emails, setEmails] = useState<AuthorizedEmail[]>([]);
   const [newEmail, setNewEmail] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [inviting, setInviting] = useState<string | null>(null);
 
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      setAuthenticated(true);
+      setPasswordError("");
+      sessionStorage.setItem("admin_auth", "true");
+    } else {
+      setPasswordError("Incorrect password");
+    }
+  };
+
+  useEffect(() => {
+    if (sessionStorage.getItem("admin_auth") === "true") {
+      setAuthenticated(true);
+    }
+  }, []);
+
   const fetchEmails = async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from("authorized_emails")
       .select("*")
       .order("created_at", { ascending: false });
     if (error) {
       console.error("Error fetching emails:", error);
-      return;
     }
     setEmails((data as unknown as AuthorizedEmail[]) || []);
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchEmails();
-  }, []);
+    if (authenticated) {
+      fetchEmails();
+    }
+  }, [authenticated]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +76,7 @@ const Admin = () => {
     const { error } = await supabase.from("authorized_emails").insert({
       email,
       status: "active",
-      added_by: user?.email || null,
+      added_by: "admin",
     } as any);
 
     if (error) {
@@ -67,9 +88,7 @@ const Admin = () => {
     setNewEmail("");
     await fetchEmails();
     setAdding(false);
-
-    // Auto-send invite
-    await sendInvite(email);
+    toast.success(`${email} added to whitelist.`);
   };
 
   const sendInvite = async (email: string) => {
@@ -81,7 +100,6 @@ const Admin = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Update invited_at
       await supabase
         .from("authorized_emails")
         .update({ invited_at: new Date().toISOString(), status: "invited" } as any)
@@ -98,19 +116,57 @@ const Admin = () => {
   };
 
   const handleRemove = async (id: string, email: string) => {
-    if (!confirm(`Remove ${email} from the whitelist? They will lose access.`)) return;
+    if (!confirm(`Remove ${email} from the whitelist?`)) return;
     const { error } = await supabase.from("authorized_emails").delete().eq("id", id);
     if (error) {
       toast.error("Failed to remove: " + error.message);
       return;
     }
     await fetchEmails();
-    toast.success(`${email} removed from whitelist.`);
+    toast.success(`${email} removed.`);
   };
+
+  // Password gate
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-6">
+            <Lock className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <h1 className="text-xl font-bold text-foreground">Admin Access</h1>
+            <p className="text-sm text-muted-foreground mt-1">Enter the admin password to continue</p>
+          </div>
+          <form onSubmit={handlePasswordSubmit} className="bg-card border border-border rounded-xl p-6 space-y-4">
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setPasswordError(""); }}
+              autoFocus
+              required
+            />
+            {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
+            <Button type="submit" className="w-full">Enter</Button>
+          </form>
+          <div className="text-center mt-4">
+            <a href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">← Back to CRM</a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
+      <nav className="h-14 bg-card border-b border-border flex items-center justify-between px-6">
+        <a href="/" className="text-base font-semibold text-foreground hover:opacity-80 transition-opacity">MKT CRM</a>
+        <button
+          onClick={() => { sessionStorage.removeItem("admin_auth"); setAuthenticated(false); }}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Lock Admin
+        </button>
+      </nav>
       <div className="flex-1 p-6 max-w-3xl mx-auto w-full">
         <div className="flex items-center gap-3 mb-6">
           <a href="/" className="p-2 rounded-lg hover:bg-secondary transition-colors">
@@ -139,7 +195,7 @@ const Admin = () => {
           </div>
           <Button type="submit" disabled={adding || !newEmail.trim()} className="gap-2">
             {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            Add & Invite
+            Add
           </Button>
         </form>
 
@@ -169,9 +225,7 @@ const Admin = () => {
                   key={entry.id}
                   className="grid grid-cols-[1fr_100px_120px_80px] gap-4 items-center px-4 py-3 hover:bg-secondary/20 transition-colors"
                 >
-                  <span className="text-sm font-medium text-foreground truncate">
-                    {entry.email}
-                  </span>
+                  <span className="text-sm font-medium text-foreground truncate">{entry.email}</span>
                   <span className="flex items-center gap-1.5">
                     {entry.status === "invited" ? (
                       <>
@@ -188,9 +242,7 @@ const Admin = () => {
                   <span className="text-xs text-muted-foreground">
                     {entry.invited_at
                       ? new Date(entry.invited_at).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
+                          month: "short", day: "numeric", year: "numeric",
                         })
                       : "—"}
                   </span>
@@ -199,7 +251,7 @@ const Admin = () => {
                       onClick={() => sendInvite(entry.email)}
                       disabled={inviting === entry.email}
                       className="p-1.5 rounded-md hover:bg-secondary transition-colors disabled:opacity-50"
-                      title="Resend invite"
+                      title="Send invite"
                     >
                       {inviting === entry.email ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
@@ -210,7 +262,7 @@ const Admin = () => {
                     <button
                       onClick={() => handleRemove(entry.id, entry.email)}
                       className="p-1.5 rounded-md hover:bg-red-50 transition-colors"
-                      title="Remove access"
+                      title="Remove"
                     >
                       <Trash2 className="w-3.5 h-3.5 text-red-500" />
                     </button>
@@ -220,11 +272,6 @@ const Admin = () => {
             </div>
           )}
         </div>
-
-        <p className="text-xs text-muted-foreground mt-4">
-          When you add an email, the investor will receive a magic link to access the CRM.
-          Only whitelisted emails can sign in.
-        </p>
       </div>
     </div>
   );
