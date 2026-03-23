@@ -117,8 +117,12 @@ export async function addClient(client: Client): Promise<void> {
 }
 
 export async function updateClient(updated: Client): Promise<void> {
+  // Auto-fill logo if not manually set
+  const logoUrl = updated.logoUrl || getAutoLogoUrl(updated.clientName);
+
   const normalized = normalizeClient({
     ...updated,
+    logoUrl,
     updatedAt: new Date().toISOString(),
   });
 
