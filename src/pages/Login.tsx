@@ -34,22 +34,22 @@ const Login = () => {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-foreground">MKT CRM</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            Acesse com seu email autorizado
+            Sign in with your authorized email
           </p>
         </div>
 
         {sent ? (
           <div className="bg-card border border-border rounded-xl p-6 text-center">
             <CheckCircle className="w-10 h-10 text-primary mx-auto mb-3" />
-            <h2 className="font-semibold text-foreground mb-1">Link enviado!</h2>
+            <h2 className="font-semibold text-foreground mb-1">Link sent!</h2>
             <p className="text-sm text-muted-foreground">
-              Verifique sua caixa de entrada em <strong>{email}</strong> e clique no link para entrar.
+              Check your inbox at <strong>{email}</strong> and click the link to sign in.
             </p>
             <button
               onClick={() => { setSent(false); setEmail(""); }}
               className="mt-4 text-sm text-primary hover:underline"
             >
-              Usar outro email
+              Use another email
             </button>
           </div>
         ) : (
@@ -60,7 +60,7 @@ const Login = () => {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type="email"
-                  placeholder="seu@email.com"
+                  placeholder="you@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -75,7 +75,7 @@ const Login = () => {
             )}
 
             <Button type="submit" className="w-full" disabled={loading || !email.trim()}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Enviar link de acesso"}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send access link"}
             </Button>
           </form>
         )}

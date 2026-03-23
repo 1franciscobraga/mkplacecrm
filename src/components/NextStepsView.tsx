@@ -1,5 +1,6 @@
 import { Client } from "@/types/crm";
 import { Clock, CheckCircle2, AlertTriangle, AlertCircle, Building2, ChevronRight } from "lucide-react";
+import { stageLabel } from "@/lib/i18n";
 
 interface NextStepsViewProps {
   clients: Client[];
@@ -19,10 +20,10 @@ const getStatus = (deadline: string | null): StepStatus => {
 };
 
 const statusConfig: Record<StepStatus, { label: string; bg: string; text: string; icon: React.ElementType }> = {
-  on_track: { label: "Em dia", bg: "bg-emerald-50", text: "text-emerald-700", icon: CheckCircle2 },
-  approaching: { label: "Próximo do vencimento", bg: "bg-amber-50", text: "text-amber-700", icon: AlertTriangle },
-  overdue: { label: "Atrasado", bg: "bg-red-50", text: "text-red-700", icon: AlertCircle },
-  no_deadline: { label: "Sem prazo", bg: "bg-gray-50", text: "text-gray-500", icon: Clock },
+  on_track: { label: "On Track", bg: "bg-emerald-50", text: "text-emerald-700", icon: CheckCircle2 },
+  approaching: { label: "Due Soon", bg: "bg-amber-50", text: "text-amber-700", icon: AlertTriangle },
+  overdue: { label: "Overdue", bg: "bg-red-50", text: "text-red-700", icon: AlertCircle },
+  no_deadline: { label: "No Deadline", bg: "bg-gray-50", text: "text-gray-500", icon: Clock },
 };
 
 const STAGE_DOT_COLORS: Record<string, string> = {
@@ -36,7 +37,6 @@ const STAGE_DOT_COLORS: Record<string, string> = {
 };
 
 const NextStepsView = ({ clients, onClientClick }: NextStepsViewProps) => {
-  // Filter clients that have next steps
   const clientsWithSteps = clients
     .filter((c) => c.nextSteps && c.nextSteps.length > 0 && c.nextSteps.some((s) => s.trim() !== ""))
     .sort((a, b) => {
@@ -51,8 +51,8 @@ const NextStepsView = ({ clients, onClientClick }: NextStepsViewProps) => {
       <div className="flex-1 flex items-center justify-center p-12">
         <div className="text-center">
           <Clock className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-          <p className="text-sm font-medium text-muted-foreground">Nenhum próximo passo cadastrado</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">Adicione próximos passos nos detalhes de cada cliente</p>
+          <p className="text-sm font-medium text-muted-foreground">No next steps registered</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Add next steps in each client's details</p>
         </div>
       </div>
     );
@@ -75,7 +75,6 @@ const NextStepsView = ({ clients, onClientClick }: NextStepsViewProps) => {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  {/* Header: company + stage */}
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
                       <Building2 className="w-4 h-4 text-muted-foreground" />
@@ -84,12 +83,11 @@ const NextStepsView = ({ clients, onClientClick }: NextStepsViewProps) => {
                       <h3 className="text-sm font-semibold text-foreground truncate">{client.clientName}</h3>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-                        <span className="text-xs text-muted-foreground">{client.dealStage}</span>
+                        <span className="text-xs text-muted-foreground">{stageLabel(client.dealStage)}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Next steps list */}
                   <div className="ml-11 space-y-1">
                     {client.nextSteps.filter((s) => s.trim()).map((step, i) => (
                       <div key={i} className="flex items-start gap-2">
@@ -99,15 +97,13 @@ const NextStepsView = ({ clients, onClientClick }: NextStepsViewProps) => {
                     ))}
                   </div>
 
-                  {/* Deadline */}
                   {client.nextContactDate && (
                     <p className="ml-11 mt-2 text-xs text-muted-foreground">
-                      Prazo: {new Date(client.nextContactDate).toLocaleDateString("pt-BR")}
+                      Deadline: {new Date(client.nextContactDate).toLocaleDateString("en-US")}
                     </p>
                   )}
                 </div>
 
-                {/* Right side: status + arrow */}
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${config.bg}`}>
                     <StatusIcon className={`w-3.5 h-3.5 ${config.text}`} />

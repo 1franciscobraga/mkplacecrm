@@ -27,7 +27,6 @@ const Index = () => {
   useEffect(() => {
     const unsubscribe = subscribeToClients((updated) => {
       setClients(updated);
-      // Refresh selected client if it's open
       setSelectedClient((prev) =>
         prev ? updated.find((c) => c.id === prev.id) ?? null : null
       );
@@ -77,9 +76,9 @@ const Index = () => {
       <div className="flex items-center justify-between px-6 border-b border-border">
         <div className="flex items-center gap-6">
           <TabButton active={activeTab === "pipeline"} onClick={() => setActiveTab("pipeline")} icon={LayoutGrid} label="Pipeline" />
-          <TabButton active={activeTab === "clients"} onClick={() => setActiveTab("clients")} icon={Table} label="Todos os Clientes" />
-           <TabButton active={activeTab === "funnel"} onClick={() => setActiveTab("funnel")} icon={TrendingDown} label="Funil" />
-           <TabButton active={activeTab === "nextsteps"} onClick={() => setActiveTab("nextsteps")} icon={ListChecks} label="Próximos Passos" />
+          <TabButton active={activeTab === "clients"} onClick={() => setActiveTab("clients")} icon={Table} label="All Clients" />
+          <TabButton active={activeTab === "funnel"} onClick={() => setActiveTab("funnel")} icon={TrendingDown} label="Funnel" />
+          <TabButton active={activeTab === "nextsteps"} onClick={() => setActiveTab("nextsteps")} icon={ListChecks} label="Next Steps" />
         </div>
 
         <div className="relative" ref={dropdownRef}>
@@ -88,7 +87,7 @@ const Index = () => {
             className="h-9 px-4 bg-primary text-primary-foreground font-medium text-sm rounded-lg hover:opacity-90 transition-all flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Novo Cliente
+            New Client
             <ChevronDown className="w-3.5 h-3.5 opacity-70" />
           </button>
           {dropdownOpen && (
@@ -98,14 +97,14 @@ const Index = () => {
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
               >
                 <FileText className="w-4 h-4 text-muted-foreground" />
-                Inserir Transcrição (Cliente)
+                Insert Transcript (Client)
               </button>
               <button
                 onClick={() => { setDropdownOpen(false); setMeetingNotesOpen(true); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
               >
                 <ClipboardList className="w-4 h-4 text-muted-foreground" />
-                Processar Reunião Interna
+                Process Internal Meeting
               </button>
               <div className="border-t border-border my-1" />
               <button
@@ -113,7 +112,7 @@ const Index = () => {
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-secondary transition-colors"
               >
                 <PenLine className="w-4 h-4 text-muted-foreground" />
-                Adicionar Manualmente
+                Add Manually
               </button>
             </div>
           )}
@@ -140,16 +139,16 @@ const Index = () => {
         <>
           <div className="fixed inset-0 bg-foreground/20 backdrop-blur-[2px] z-[60]" onClick={() => setDeleteTarget(null)} />
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-card rounded-xl shadow-modal z-[60] p-6">
-            <h3 className="font-semibold text-base text-foreground mb-2">Excluir cliente</h3>
+            <h3 className="font-semibold text-base text-foreground mb-2">Delete Client</h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Tem certeza que deseja excluir <strong className="text-foreground">{deleteTarget.clientName}</strong>? Esta ação não pode ser desfeita.
+              Are you sure you want to delete <strong className="text-foreground">{deleteTarget.clientName}</strong>? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setDeleteTarget(null)} className="h-9 px-4 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
-                Cancelar
+                Cancel
               </button>
               <button onClick={handleDeleteConfirm} className="h-9 px-5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
-                Excluir
+                Delete
               </button>
             </div>
           </div>

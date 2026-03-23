@@ -38,14 +38,14 @@ const ManualClientModal = ({ open, onClose, onSave, prefilled, aiBanner }: Manua
     const formState = normalizeExtractedData(data);
 
     if (!formState.clientName.trim()) {
-      setClientNameError("Nome do Cliente é obrigatório para salvar.");
+      setClientNameError("Client Name is required to save.");
       return;
     }
 
     const newClient: Client = buildClientFromFormData(formState, {
-      meetingSummary: aiBanner ? "Reunião inicial (transcrição importada)" : "Reunião registrada",
+      meetingSummary: aiBanner ? "Initial meeting (transcript imported)" : "Meeting registered",
       notes: "",
-      assignedTo: "Você",
+      assignedTo: "You",
     });
 
     console.log("Saving client object:", JSON.stringify(newClient, null, 2));
@@ -64,7 +64,7 @@ const ManualClientModal = ({ open, onClose, onSave, prefilled, aiBanner }: Manua
       <div className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-4xl md:max-h-[85vh] bg-card rounded-xl shadow-modal z-50 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <h2 className="font-semibold text-base">
-            {aiBanner ? "Revisar Dados Extraídos" : "Adicionar Cliente Manualmente"}
+            {aiBanner ? "Review Extracted Data" : "Add Client Manually"}
           </h2>
           <button onClick={resetAndClose} className="p-1.5 hover:bg-secondary rounded-lg transition-colors">
             <X className="w-4 h-4 text-muted-foreground" />
@@ -75,7 +75,7 @@ const ManualClientModal = ({ open, onClose, onSave, prefilled, aiBanner }: Manua
           {aiBanner && (
             <div className="flex items-start gap-2 p-3 bg-secondary border border-border rounded-lg mb-5 text-sm text-foreground">
               <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>Dados extraídos pela IA — revise e edite antes de salvar.</span>
+              <span>Data extracted by AI — review and edit before saving.</span>
             </div>
           )}
 
@@ -96,13 +96,13 @@ const ManualClientModal = ({ open, onClose, onSave, prefilled, aiBanner }: Manua
             onClick={resetAndClose}
             className="h-9 px-4 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
-            Cancelar
+            Cancel
           </button>
           <button
             onClick={handleSave}
             className="h-9 px-5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-all"
           >
-            {aiBanner ? "Confirmar e Salvar" : "Salvar Cliente"}
+            {aiBanner ? "Confirm & Save" : "Save Client"}
           </button>
         </div>
       </div>

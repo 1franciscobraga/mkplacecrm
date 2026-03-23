@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Client, DEAL_STAGES, DealStage, STAGE_BADGE_STYLES } from "@/types/crm";
 import { Search, ChevronDown, ChevronUp, Filter, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { stageLabel } from "@/lib/i18n";
 
 interface ClientsTableProps {
   clients: Client[];
@@ -51,7 +52,7 @@ const ClientsTable = ({ clients, onClientClick, onEdit, onDelete }: ClientsTable
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Buscar clientes..."
+            placeholder="Search clients..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full h-9 pl-9 pr-4 bg-card border border-border rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:shadow-input-focus transition-all"
@@ -64,8 +65,8 @@ const ClientsTable = ({ clients, onClientClick, onEdit, onDelete }: ClientsTable
             onChange={(e) => setStageFilter(e.target.value as DealStage | "all")}
             className="h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary focus:shadow-input-focus transition-all"
           >
-            <option value="all">Todas as etapas</option>
-            {DEAL_STAGES.map((s) => (<option key={s} value={s}>{s}</option>))}
+            <option value="all">All Stages</option>
+            {DEAL_STAGES.map((s) => (<option key={s} value={s}>{stageLabel(s)}</option>))}
           </select>
         </div>
       </div>
@@ -76,13 +77,13 @@ const ClientsTable = ({ clients, onClientClick, onEdit, onDelete }: ClientsTable
             <thead>
               <tr className="border-b border-border">
                 {([
-                  ["clientName", "Cliente"],
-                  ["dealStage", "Etapa"],
-                  [null, "Dores"],
-                  [null, "Próx. Passo"],
-                  ["meetingDate", "Última Reunião"],
-                  ["dealValue", "Valor"],
-                  [null, "Responsável"],
+                  ["clientName", "Client"],
+                  ["dealStage", "Stage"],
+                  [null, "Pain Points"],
+                  [null, "Next Step"],
+                  ["meetingDate", "Last Meeting"],
+                  ["dealValue", "Value"],
+                  [null, "Assigned To"],
                   [null, ""],
                 ] as const).map(([field, label], i) => (
                   <th
@@ -97,7 +98,7 @@ const ClientsTable = ({ clients, onClientClick, onEdit, onDelete }: ClientsTable
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-12 text-muted-foreground text-sm">Nenhum cliente encontrado.</td></tr>
+                <tr><td colSpan={8} className="text-center py-12 text-muted-foreground text-sm">No clients found.</td></tr>
               ) : (
                 filtered.map((client) => (
                   <TableRow key={client.id} client={client} onClick={() => onClientClick(client)} onEdit={() => onEdit(client)} onDelete={() => onDelete(client)} />
@@ -133,12 +134,12 @@ const TableRow = ({ client, onClick, onEdit, onDelete }: { client: Client; onCli
       <td className="px-4 py-3">
         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.bg} ${badge.text}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
-          {client.dealStage}
+          {stageLabel(client.dealStage)}
         </span>
       </td>
       <td className="px-4 py-3 max-w-[200px]"><p className="text-xs text-muted-foreground truncate">{client.painPointsAndChallenges?.[0] || "—"}</p></td>
       <td className="px-4 py-3 max-w-[200px]"><p className="text-xs text-muted-foreground truncate">{client.nextSteps?.[0] || "—"}</p></td>
-      <td className="px-4 py-3"><span className="text-xs text-muted-foreground">{client.meetingDate ? new Date(client.meetingDate).toLocaleDateString("pt-BR") : "—"}</span></td>
+      <td className="px-4 py-3"><span className="text-xs text-muted-foreground">{client.meetingDate ? new Date(client.meetingDate).toLocaleDateString("en-US") : "—"}</span></td>
       <td className="px-4 py-3"><span className="text-sm font-semibold text-primary">{client.dealValue || "—"}</span></td>
       <td className="px-4 py-3"><span className="text-xs text-muted-foreground">{client.assignedTo}</span></td>
       <td className="px-4 py-3 w-10">
@@ -153,11 +154,11 @@ const TableRow = ({ client, onClick, onEdit, onDelete }: { client: Client; onCli
             <div className="absolute right-0 top-full mt-1 w-44 bg-card rounded-lg shadow-modal border border-border py-1 z-30">
               <button onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors">
                 <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-                Editar
+                Edit
               </button>
               <button onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                 <Trash2 className="w-3.5 h-3.5" />
-                Excluir cliente
+                Delete Client
               </button>
             </div>
           )}

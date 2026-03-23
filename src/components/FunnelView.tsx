@@ -3,26 +3,20 @@ import { Client, DEAL_STAGES, DealStage } from "@/types/crm";
 import { computeDealProbability } from "@/lib/dealProbability";
 import { Users, DollarSign, TrendingUp, Target } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-
-interface FunnelViewProps {
-  clients: Client[];
-  onClientClick: (client: Client) => void;
-}
+import { stageLabel, STAGE_SHORT } from "@/lib/i18n";
 
 // ─── Geometry ──────────────────────────────────────────────────────────────────
-const N       = DEAL_STAGES.length; // 7
-const BAND_H  = 68;                 // height of each funnel band (px in SVG coords)
-const CX      = 230;                // horizontal center of the SVG
-const MAX_W   = 420;                // width of the TOP band
-const MIN_W   = 70;                 // width of the BOTTOM band
-const W_STEP  = (MAX_W - MIN_W) / N; // = 50 px reduction per band
-const SVG_W   = CX * 2;            // 460
-const SVG_H   = N * BAND_H;        // 476
+const N       = DEAL_STAGES.length;
+const BAND_H  = 68;
+const CX      = 230;
+const MAX_W   = 420;
+const MIN_W   = 70;
+const W_STEP  = (MAX_W - MIN_W) / N;
+const SVG_W   = CX * 2;
+const SVG_H   = N * BAND_H;
 
-// Width at the vertical midpoint of band i
 function midW(i: number) { return MAX_W - (i + 0.5) * W_STEP; }
 
-// SVG <path> for band i (trapezoid, no gaps)
 function bandPath(i: number): string {
   const topW = MAX_W - i * W_STEP;
   const botW = MAX_W - (i + 1) * W_STEP;
@@ -35,18 +29,13 @@ function bandPath(i: number): string {
 
 // ─── Color palette ─────────────────────────────────────────────────────────────
 const PALETTE: { fill: string; dark: string }[] = [
-  { fill: "#64748b", dark: "#475569" }, // 1. Lead        – slate
-  { fill: "#3b82f6", dark: "#2563eb" }, // 2. Reunião     – blue
-  { fill: "#06b6d4", dark: "#0891b2" }, // 3. Escopo      – cyan
-  { fill: "#8b5cf6", dark: "#7c3aed" }, // 4. Proposta    – violet
-  { fill: "#f59e0b", dark: "#d97706" }, // 5. Contrato    – amber
-  { fill: "#f97316", dark: "#ea580c" }, // 6. Assinatura  – orange
-  { fill: "#10b981", dark: "#059669" }, // 7. Go-Live     – emerald
-];
-
-// Short labels for inside the bands
-const SHORT: string[] = [
-  "Lead", "Reunião", "Escopo", "Proposta", "Contrato", "Assinatura", "Go-Live",
+  { fill: "#64748b", dark: "#475569" },
+  { fill: "#3b82f6", dark: "#2563eb" },
+  { fill: "#06b6d4", dark: "#0891b2" },
+  { fill: "#8b5cf6", dark: "#7c3aed" },
+  { fill: "#f59e0b", dark: "#d97706" },
+  { fill: "#f97316", dark: "#ea580c" },
+  { fill: "#10b981", dark: "#059669" },
 ];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -64,13 +53,12 @@ function fmtCurrency(v: number): string {
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────────
-export default function FunnelView({ clients, onClientClick }: FunnelViewProps) {
+export default function FunnelView({ clients, onClientClick }: { clients: Client[]; onClientClick: (client: Client) => void }) {
   const stageData = useMemo(() => {
     return DEAL_STAGES.map((stage, idx) => {
       const sc    = clients.filter(c => c.dealStage === stage);
       const count = sc.length;
 
-      // Cumulative: how many leads are at this stage or beyond
       const fromHere = clients.filter(c => DEAL_STAGES.indexOf(c.dealStage) >= idx).length;
       const fromNext  = idx < N - 1
         ? clients.filter(c => DEAL_STAGES.indexOf(c.dealStage) > idx).length
@@ -91,7 +79,6 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
     });
   }, [clients]);
 
-  // ── Summary stats ────────────────────────────────────────────────
   const totalRevenue = stageData.reduce((s, m) => s + m.revenue, 0);
   const totalLeads   = clients.length;
   const firstCount   = stageData[0].count;
@@ -105,25 +92,21 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
   return (
     <div className="flex-1 flex overflow-hidden" style={{ background: "#f8fafc" }}>
 
-      {/* ═══════════════════════════════════════════════
-          LEFT AREA — funnel visual + aligned labels
-      ═══════════════════════════════════════════════ */}
+      {/* LEFT AREA — funnel visual + aligned labels */}
       <div className="flex-1 flex flex-col items-center py-8 px-6 overflow-y-auto min-w-0">
 
-        {/* Heading */}
         <div className="mb-8 text-center">
           <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1e293b", letterSpacing: "-0.02em" }}>
-            Funil de Vendas
+            Sales Funnel
           </h2>
           <p style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>
-            {totalLeads} leads ativos no pipeline
+            {totalLeads} active leads in pipeline
           </p>
         </div>
 
-        {/* Row: SVG funnel + right labels */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 24 }}>
 
-          {/* ── SVG FUNNEL ── */}
+          {/* SVG FUNNEL */}
           <div style={{ flexShrink: 0, width: SVG_W, height: SVG_H, position: "relative" }}>
             <svg
               viewBox={`0 0 ${SVG_W} ${SVG_H}`}
@@ -150,17 +133,12 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
 
                 return (
                   <g key={i}>
-                    {/* Trapezoid band */}
                     <path d={bandPath(i)} fill={`url(#fgr${i})`} />
-
-                    {/* Subtle white highlight at top edge */}
                     <line
                       x1={CX - topW / 2 + 3} y1={i * BAND_H + 1.5}
                       x2={CX + topW / 2 - 3} y2={i * BAND_H + 1.5}
                       stroke="white" strokeWidth={1.5} opacity={0.20}
                     />
-
-                    {/* Count number — pushed to top of band */}
                     <text
                       x={CX}
                       y={i * BAND_H + 15}
@@ -178,7 +156,7 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
               })}
             </svg>
 
-            {/* ── Company names overlay ── */}
+            {/* Company names overlay */}
             <TooltipProvider delayDuration={150}>
               <div style={{ position: "absolute", top: 0, left: 0, width: SVG_W, height: SVG_H, pointerEvents: "none" }}>
                 {stageData.map((m, i) => {
@@ -254,16 +232,16 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
                                   <span className="font-semibold text-foreground">{c.dealValue || "—"}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs">
-                                  <span className="text-muted-foreground">Probabilidade:</span>
+                                  <span className="text-muted-foreground">Probability:</span>
                                   <span className="font-semibold text-foreground">{prob}%</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs">
-                                  <span className="text-muted-foreground">Etapa:</span>
-                                  <span className="font-semibold text-foreground">{c.dealStage}</span>
+                                  <span className="text-muted-foreground">Stage:</span>
+                                  <span className="font-semibold text-foreground">{stageLabel(c.dealStage)}</span>
                                 </div>
                                 {lastDate && (
                                   <div className="flex items-center gap-2 text-xs">
-                                    <span className="text-muted-foreground">Última interação:</span>
+                                    <span className="text-muted-foreground">Last interaction:</span>
                                     <span className="font-semibold text-foreground">{lastDate}</span>
                                   </div>
                                 )}
@@ -282,7 +260,7 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
             </TooltipProvider>
           </div>
 
-          {/* ── ALIGNED LABELS (right of funnel) ── */}
+          {/* ALIGNED LABELS (right of funnel) */}
           <div style={{ display: "flex", flexDirection: "column", height: SVG_H }}>
             {stageData.map((m, i) => (
               <div
@@ -297,7 +275,6 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
                   minWidth: 200,
                 }}
               >
-                {/* Full stage name */}
                 <p style={{
                   fontSize: 11.5,
                   fontWeight: 700,
@@ -305,10 +282,9 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
                   lineHeight: 1.3,
                   marginBottom: 2,
                 }}>
-                  {m.stage}
+                  {stageLabel(m.stage)}
                 </p>
 
-                {/* Count + conversion */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: PALETTE[i].fill }}>
                     {m.count} lead{m.count !== 1 ? "s" : ""}
@@ -320,9 +296,8 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
                   )}
                 </div>
 
-                {/* Revenue estimate */}
                 <p style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>
-                  Rec. est.:&nbsp;
+                  Est. rev.:&nbsp;
                   <span style={{ fontWeight: 700, color: "#475569" }}>TBD</span>
                 </p>
               </div>
@@ -331,9 +306,7 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════
-          RIGHT PANEL — KPIs + top companies per stage
-      ═══════════════════════════════════════════════ */}
+      {/* RIGHT PANEL — KPIs + top companies per stage */}
       <div style={{
         width: 272,
         flexShrink: 0,
@@ -344,7 +317,6 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
         overflowY: "auto",
       }}>
 
-        {/* KPI cards */}
         <div style={{ padding: "20px 18px 16px", borderBottom: "1px solid #f1f5f9" }}>
           <p style={{
             fontSize: 9,
@@ -357,14 +329,13 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
             Pipeline Overview
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <KpiCard icon={<Users    size={14} />} label="Total de Leads"   value={String(totalLeads)}        accent="#2563eb" />
-            <KpiCard icon={<TrendingUp size={14} />} label="Conversão Geral" value={`${overallConv}%`}        accent="#059669" />
-            <KpiCard icon={<DollarSign size={14} />} label="Receita Estimada" value="TBD" accent="#7c3aed" />
-            <KpiCard icon={<Target   size={14} />} label="Ticket Médio"     value="TBD"    accent="#d97706" />
+            <KpiCard icon={<Users    size={14} />} label="Total Leads"       value={String(totalLeads)}  accent="#2563eb" />
+            <KpiCard icon={<TrendingUp size={14} />} label="Overall Conv."   value={`${overallConv}%`}   accent="#059669" />
+            <KpiCard icon={<DollarSign size={14} />} label="Est. Revenue"    value="TBD"                 accent="#7c3aed" />
+            <KpiCard icon={<Target   size={14} />} label="Avg. Ticket"       value="TBD"                 accent="#d97706" />
           </div>
         </div>
 
-        {/* Top companies per stage */}
         <div style={{ flex: 1, overflowY: "auto" }}>
           <div style={{
             padding: "9px 18px",
@@ -378,7 +349,7 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
               letterSpacing: "0.14em",
               textTransform: "uppercase",
             }}>
-              Top Empresas por Etapa
+              Top Companies by Stage
             </p>
           </div>
 
@@ -388,7 +359,6 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
                 padding: "11px 18px",
                 borderBottom: "1px solid #f8fafc",
               }}>
-                {/* Stage chip */}
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                   <div style={{
                     width: 7, height: 7,
@@ -404,11 +374,10 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
                   }}>
-                    {m.stage}
+                    {stageLabel(m.stage)}
                   </p>
                 </div>
 
-                {/* Company list */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
                   {m.top5.slice(0, 3).map(c => {
                     const prob = computeDealProbability(c).overall;
@@ -458,7 +427,6 @@ export default function FunnelView({ clients, onClientClick }: FunnelViewProps) 
   );
 }
 
-// ─── KPI Card sub-component ────────────────────────────────────────────────────
 function KpiCard({
   icon, label, value, accent,
 }: {
