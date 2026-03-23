@@ -160,6 +160,7 @@ export const normalizeClient = (input: Partial<Client>): Client => {
   return {
     id: toNullableString(input.id) ?? generateClientId(),
     ...normalized,
+    logoUrl: toNullableString(input.logoUrl) ?? null,
     assignedTo: toNullableString(input.assignedTo) ?? "You",
     createdAt,
     updatedAt,

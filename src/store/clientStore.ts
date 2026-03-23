@@ -75,6 +75,7 @@ const clientToRow = (client: Client) => ({
   expansion_potential: client.expansionPotential,
   price_sensitivity: client.priceSensitivity,
   lead_source: client.leadSource,
+  logo_url: client.logoUrl,
   assigned_to: client.assignedTo,
   meetings: client.meetings,
   notes: client.notes,
