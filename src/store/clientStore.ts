@@ -1,6 +1,7 @@
 import { Client, DealStage } from "@/types/crm";
 import { normalizeClient } from "@/lib/clientData";
 import { supabase } from "@/integrations/supabase/client";
+import { getAutoLogoUrl } from "@/lib/companyLogo";
 
 // ── Mapping helpers: DB row ↔ Client ──
 
@@ -100,8 +101,12 @@ export async function getClients(): Promise<Client[]> {
 }
 
 export async function addClient(client: Client): Promise<void> {
+  // Auto-fill logo if not manually set
+  const logoUrl = client.logoUrl || getAutoLogoUrl(client.clientName);
+
   const normalized = normalizeClient({
     ...client,
+    logoUrl,
     updatedAt: new Date().toISOString(),
   });
   console.log("Saving client object:", JSON.stringify(normalized, null, 2));
@@ -112,8 +117,12 @@ export async function addClient(client: Client): Promise<void> {
 }
 
 export async function updateClient(updated: Client): Promise<void> {
+  // Auto-fill logo if not manually set
+  const logoUrl = updated.logoUrl || getAutoLogoUrl(updated.clientName);
+
   const normalized = normalizeClient({
     ...updated,
+    logoUrl,
     updatedAt: new Date().toISOString(),
   });
 
