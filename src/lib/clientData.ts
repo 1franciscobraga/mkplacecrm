@@ -65,7 +65,7 @@ const normalizeMeetings = (value: unknown): Meeting[] => {
       if (!item || typeof item !== "object") return null;
       const meeting = item as Partial<Meeting>;
       const date = toNullableString(meeting.date) ?? new Date().toISOString().slice(0, 10);
-      const summary = toNullableString(meeting.summary) ?? "Reunião registrada";
+      const summary = toNullableString(meeting.summary) ?? "Meeting registered";
       const transcript = toNullableString(meeting.transcript) ?? undefined;
 
       return {
