@@ -1,9 +1,7 @@
-import { Bell, User, Settings, LogOut } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Bell, User, Settings } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const Navbar = () => {
-  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,14 +22,7 @@ const Navbar = () => {
           <Bell className="w-[18px] h-[18px] text-muted-foreground" />
           <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-full" />
         </button>
-        <button
-          onClick={signOut}
-          className="p-2 rounded-lg hover:bg-secondary transition-colors"
-          title={`Sign out (${user?.email})`}
-        >
-          <LogOut className="w-[18px] h-[18px] text-muted-foreground" />
-        </button>
-        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center" title={user?.email || ""}>
+        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
           <User className="w-4 h-4 text-muted-foreground" />
         </div>
       </div>
