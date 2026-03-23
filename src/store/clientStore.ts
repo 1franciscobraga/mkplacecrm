@@ -36,6 +36,7 @@ const rowToClient = (row: Record<string, unknown>): Client =>
     expansionPotential: row.expansion_potential as Client["expansionPotential"],
     priceSensitivity: row.price_sensitivity as Client["priceSensitivity"],
     leadSource: row.lead_source as string | null,
+    logoUrl: row.logo_url as string | null,
     assignedTo: row.assigned_to as string,
     meetings: (row.meetings ?? []) as Client["meetings"],
     notes: (row.notes ?? "") as string,
