@@ -95,9 +95,12 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
         <div className="p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
-            <div>
-              <h2 className="font-semibold text-lg text-foreground">{d.clientName}</h2>
-              <p className="text-sm text-muted-foreground">{d.projectName || "—"}</p>
+            <div className="flex items-center gap-3">
+              <CompanyLogo logoUrl={d.logoUrl} companyName={d.clientName} size={48} />
+              <div>
+                <h2 className="font-semibold text-lg text-foreground">{d.clientName}</h2>
+                <p className="text-sm text-muted-foreground">{d.projectName || "—"}</p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {editing ? (
