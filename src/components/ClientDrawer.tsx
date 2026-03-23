@@ -3,6 +3,7 @@ import { Client, STAGE_BADGE_STYLES, DEAL_STAGES, DealStage, ComplexityLevel, Po
 import { X, Pencil, RotateCcw, AlertCircle, CheckCircle2, Clock, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { stageLabel, complexityLabel, potentialLabel, sensitivityLabel } from "@/lib/i18n";
+import CompanyLogo from "@/components/CompanyLogo";
 
 interface ClientDrawerProps {
   client: Client | null;
