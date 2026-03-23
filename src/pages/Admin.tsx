@@ -62,6 +62,30 @@ const Admin = () => {
     }
   }, [authenticated]);
 
+  const sendInvite = async (email: string) => {
+    setInviting(email);
+    try {
+      const { data, error } = await supabase.functions.invoke("invite-user", {
+        body: { email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      await supabase
+        .from("authorized_emails")
+        .update({ invited_at: new Date().toISOString(), status: "invited" } as any)
+        .eq("email", email);
+
+      await fetchEmails();
+      toast.success(`Invite sent to ${email}`);
+    } catch (err: any) {
+      console.error("Invite error:", err);
+      toast.error(`Failed to send invite: ${err.message || "Unknown error"}`);
+    } finally {
+      setInviting(null);
+    }
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const email = newEmail.trim().toLowerCase();
@@ -87,32 +111,11 @@ const Admin = () => {
 
     setNewEmail("");
     await fetchEmails();
+    toast.success(`${email} added. Sending invite...`);
+
+    // Auto-send invite after adding
+    await sendInvite(email);
     setAdding(false);
-    toast.success(`${email} added to whitelist.`);
-  };
-
-  const sendInvite = async (email: string) => {
-    setInviting(email);
-    try {
-      const { data, error } = await supabase.functions.invoke("invite-user", {
-        body: { email },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      await supabase
-        .from("authorized_emails")
-        .update({ invited_at: new Date().toISOString(), status: "invited" } as any)
-        .eq("email", email);
-
-      await fetchEmails();
-      toast.success(`Invite sent to ${email}`);
-    } catch (err: any) {
-      console.error("Invite error:", err);
-      toast.error(`Failed to send invite: ${err.message || "Unknown error"}`);
-    } finally {
-      setInviting(null);
-    }
   };
 
   const handleRemove = async (id: string, email: string) => {
@@ -175,7 +178,7 @@ const Admin = () => {
           <div>
             <h1 className="text-lg font-bold text-foreground">Access Management</h1>
             <p className="text-sm text-muted-foreground">
-              Manage authorized emails. Only whitelisted emails can access the CRM.
+              Add investor emails to send them a magic link invite. Only invited users can access the CRM.
             </p>
           </div>
         </div>
@@ -195,7 +198,7 @@ const Admin = () => {
           </div>
           <Button type="submit" disabled={adding || !newEmail.trim()} className="gap-2">
             {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            Add
+            Add & Invite
           </Button>
         </form>
 
@@ -235,7 +238,7 @@ const Admin = () => {
                     ) : (
                       <>
                         <Clock className="w-3.5 h-3.5 text-amber-500" />
-                        <span className="text-xs text-amber-600 font-medium">Active</span>
+                        <span className="text-xs text-amber-600 font-medium">Pending</span>
                       </>
                     )}
                   </span>
@@ -251,7 +254,7 @@ const Admin = () => {
                       onClick={() => sendInvite(entry.email)}
                       disabled={inviting === entry.email}
                       className="p-1.5 rounded-md hover:bg-secondary transition-colors disabled:opacity-50"
-                      title="Send invite"
+                      title="Resend invite"
                     >
                       {inviting === entry.email ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
