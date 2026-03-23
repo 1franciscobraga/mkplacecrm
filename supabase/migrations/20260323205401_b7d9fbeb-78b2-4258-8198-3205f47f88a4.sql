@@ -1,0 +1,1 @@
+CREATE POLICY "Allow anon read" ON public.authorized_emails FOR SELECT TO anon USING (true);
