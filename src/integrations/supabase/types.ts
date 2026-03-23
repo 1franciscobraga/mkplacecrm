@@ -55,6 +55,7 @@ export type Database = {
           id: string
           implementation_complexity: string | null
           lead_source: string | null
+          logo_url: string | null
           meeting_date: string | null
           meetings: Json
           next_contact_date: string | null
@@ -92,6 +93,7 @@ export type Database = {
           id: string
           implementation_complexity?: string | null
           lead_source?: string | null
+          logo_url?: string | null
           meeting_date?: string | null
           meetings?: Json
           next_contact_date?: string | null
@@ -129,6 +131,7 @@ export type Database = {
           id?: string
           implementation_complexity?: string | null
           lead_source?: string | null
+          logo_url?: string | null
           meeting_date?: string | null
           meetings?: Json
           next_contact_date?: string | null
