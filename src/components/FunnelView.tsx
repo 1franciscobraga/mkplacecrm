@@ -105,7 +105,88 @@ export default function FunnelView({ clients, onClientClick }: { clients: Client
           </p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 24 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 0 }}>
+
+          {/* LEFT — Top company logos aligned to stages */}
+          <div style={{ display: "flex", flexDirection: "column", height: SVG_H, flexShrink: 0, width: 160, marginRight: 20 }}>
+            {stageData.map((m, i) => {
+              const logos = m.top5.slice(0, 3);
+              return (
+                <div
+                  key={m.stage}
+                  style={{
+                    height: BAND_H,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: 0,
+                  }}
+                >
+                  {logos.length > 0 ? (
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      {logos.map((c, li) => (
+                        <TooltipProvider key={c.id} delayDuration={120}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => onClientClick(c)}
+                                style={{
+                                  width: 30,
+                                  height: 30,
+                                  borderRadius: 8,
+                                  border: "2px solid #fff",
+                                  background: "#f1f5f9",
+                                  overflow: "hidden",
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  marginLeft: li > 0 ? -8 : 0,
+                                  position: "relative",
+                                  zIndex: logos.length - li,
+                                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                                  transition: "transform 0.15s, box-shadow 0.15s",
+                                  flexShrink: 0,
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.15)"; e.currentTarget.style.zIndex = "20"; e.currentTarget.style.boxShadow = "0 3px 8px rgba(0,0,0,0.15)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.zIndex = String(logos.length - li); e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)"; }}
+                              >
+                                {c.logoUrl ? (
+                                  <img src={c.logoUrl} alt={c.clientName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                                ) : (
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8" }}>
+                                    {c.clientName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                                  </span>
+                                )}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left" sideOffset={8} className="max-w-xs p-3 z-[100]">
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                  <CompanyLogo logoUrl={c.logoUrl} companyName={c.clientName} size={24} />
+                                  <p className="font-bold text-sm text-foreground">{c.clientName}</p>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs">
+                                  <span className="text-muted-foreground">Deal:</span>
+                                  <span className="font-semibold text-foreground">{c.dealValue || "—"}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs">
+                                  <span className="text-muted-foreground">Probability:</span>
+                                  <span className="font-semibold text-foreground">{computeDealProbability(c).overall}%</span>
+                                </div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ width: 30, height: 30 }} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
 
           {/* SVG FUNNEL */}
           <div style={{ flexShrink: 0, width: SVG_W, height: SVG_H, position: "relative" }}>
