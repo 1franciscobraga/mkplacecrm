@@ -129,6 +129,7 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                 <ReadOrEdit editing={editing} label="Project / Internal Name" value={d.projectName} onChange={(v) => set("projectName", v || null)} />
                 <ReadOrEdit editing={editing} label="Meeting Date" value={d.meetingDate} onChange={(v) => set("meetingDate", v || null)} type="date" />
                 <ReadOrEdit editing={editing} label="Business Model" value={d.businessModel} onChange={(v) => set("businessModel", v || null)} />
+                <ReadOrEdit editing={editing} label="Logo URL" value={d.logoUrl} onChange={(v) => set("logoUrl", v || null)} placeholder="https://example.com/logo.png" />
               </div>
 
               <SectionHeader label="Primary Contact" />
