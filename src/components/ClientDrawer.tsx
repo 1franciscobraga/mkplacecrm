@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Client, STAGE_BADGE_STYLES, DEAL_STAGES, DealStage, ComplexityLevel, PotentialLevel, SensitivityLevel } from "@/types/crm";
 import { X, Pencil, RotateCcw, AlertCircle, CheckCircle2, Clock, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { stageLabel, complexityLabel, potentialLabel, sensitivityLabel } from "@/lib/i18n";
 
 interface ClientDrawerProps {
   client: Client | null;
@@ -41,12 +42,12 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
   };
 
   const getStepStatus = () => {
-    if (!d.nextContactDate) return { status: "no_deadline" as const, label: "Sem prazo", color: "text-muted-foreground", bg: "bg-secondary", Icon: Clock };
+    if (!d.nextContactDate) return { status: "no_deadline" as const, label: "No Deadline", color: "text-muted-foreground", bg: "bg-secondary", Icon: Clock };
     const due = new Date(d.nextContactDate);
     const diffDays = Math.ceil((due.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return { status: "overdue" as const, label: "Atrasado", color: "text-red-700", bg: "bg-red-50", Icon: AlertCircle };
-    if (diffDays <= 3) return { status: "approaching" as const, label: "Próximo do vencimento", color: "text-amber-700", bg: "bg-amber-50", Icon: AlertTriangle };
-    return { status: "on_track" as const, label: "Em dia", color: "text-emerald-700", bg: "bg-emerald-50", Icon: CheckCircle2 };
+    if (diffDays < 0) return { status: "overdue" as const, label: "Overdue", color: "text-red-700", bg: "bg-red-50", Icon: AlertCircle };
+    if (diffDays <= 3) return { status: "approaching" as const, label: "Due Soon", color: "text-amber-700", bg: "bg-amber-50", Icon: AlertTriangle };
+    return { status: "on_track" as const, label: "On Track", color: "text-emerald-700", bg: "bg-emerald-50", Icon: CheckCircle2 };
   };
 
   const stepStatus = getStepStatus();
@@ -100,13 +101,13 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
             <div className="flex items-center gap-2">
               {editing ? (
                 <>
-                  <button onClick={cancelEdit} className="h-8 px-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">Cancelar</button>
-                  <button onClick={saveEdit} className="h-8 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-all">Salvar Alterações</button>
+                  <button onClick={cancelEdit} className="h-8 px-3 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">Cancel</button>
+                  <button onClick={saveEdit} className="h-8 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-all">Save Changes</button>
                 </>
               ) : (
                 <button onClick={startEdit} className="h-8 px-3 border border-primary text-primary rounded-lg text-sm font-medium hover:bg-primary/5 transition-colors flex items-center gap-1.5">
                   <Pencil className="w-3.5 h-3.5" />
-                  Editar
+                  Edit
                 </button>
               )}
               <button onClick={onClose} className="p-1.5 hover:bg-secondary rounded-lg transition-colors">
@@ -118,51 +119,44 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
           <div className="flex gap-6">
             {/* Main content */}
             <div className="flex-1 space-y-6">
-              {/* Identificação */}
-              <SectionHeader label="Identificação" />
+              <SectionHeader label="Identification" />
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                <ReadOrEdit editing={editing} label="Nome do Cliente" value={d.clientName} onChange={(v) => set("clientName", v)} />
-                <ReadOrEdit editing={editing} label="Projeto / Nome Interno" value={d.projectName} onChange={(v) => set("projectName", v || null)} />
-                <ReadOrEdit editing={editing} label="Data da Reunião" value={d.meetingDate} onChange={(v) => set("meetingDate", v || null)} type="date" />
-                <ReadOrEdit editing={editing} label="Modelo de Negócio" value={d.businessModel} onChange={(v) => set("businessModel", v || null)} />
+                <ReadOrEdit editing={editing} label="Client Name" value={d.clientName} onChange={(v) => set("clientName", v)} />
+                <ReadOrEdit editing={editing} label="Project / Internal Name" value={d.projectName} onChange={(v) => set("projectName", v || null)} />
+                <ReadOrEdit editing={editing} label="Meeting Date" value={d.meetingDate} onChange={(v) => set("meetingDate", v || null)} type="date" />
+                <ReadOrEdit editing={editing} label="Business Model" value={d.businessModel} onChange={(v) => set("businessModel", v || null)} />
               </div>
 
-              {/* Contato Principal */}
-              <SectionHeader label="Contato Principal" />
+              <SectionHeader label="Primary Contact" />
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                <ReadOrEdit editing={editing} label="Nome do Contato" value={d.contactName} onChange={(v) => set("contactName", v || null)} />
-                <ReadOrEdit editing={editing} label="Cargo / Função" value={d.contactRole} onChange={(v) => set("contactRole", v || null)} />
+                <ReadOrEdit editing={editing} label="Contact Name" value={d.contactName} onChange={(v) => set("contactName", v || null)} />
+                <ReadOrEdit editing={editing} label="Role / Position" value={d.contactRole} onChange={(v) => set("contactRole", v || null)} />
                 <ReadOrEdit editing={editing} label="Email" value={d.contactEmail} onChange={(v) => set("contactEmail", v || null)} type="email" />
-                <ReadOrEdit editing={editing} label="Telefone" value={d.contactPhone} onChange={(v) => set("contactPhone", v || null)} />
-                <ReadOrEdit editing={editing} label="Empresa / Grupo Econômico" value={d.companyGroup} onChange={(v) => set("companyGroup", v || null)} />
-                <ReadOrEdit editing={editing} label="Origem do Cliente" value={d.leadSource} onChange={(v) => set("leadSource", v || null)} />
+                <ReadOrEdit editing={editing} label="Phone" value={d.contactPhone} onChange={(v) => set("contactPhone", v || null)} />
+                <ReadOrEdit editing={editing} label="Company / Economic Group" value={d.companyGroup} onChange={(v) => set("companyGroup", v || null)} />
+                <ReadOrEdit editing={editing} label="Lead Source" value={d.leadSource} onChange={(v) => set("leadSource", v || null)} />
               </div>
 
-              {/* Análise Comercial */}
-              <SectionHeader label="Análise Comercial" />
-              <ReadOrEditTextarea editing={editing} label="Resumo Executivo" value={d.executiveSummary} onChange={(v) => set("executiveSummary", v || null)} />
-              <ReadOrEditList editing={editing} label="Dores & Desafios" items={d.painPointsAndChallenges} onChange={(v) => set("painPointsAndChallenges", v)} />
-              <ReadOrEditList editing={editing} label="Objetivos & Expectativas" items={d.goalsAndExpectations} onChange={(v) => set("goalsAndExpectations", v)} />
-              <ReadOrEditList editing={editing} label="Diferenciais do Cliente" items={d.clientDifferentials} onChange={(v) => set("clientDifferentials", v)} />
+              <SectionHeader label="Commercial Analysis" />
+              <ReadOrEditTextarea editing={editing} label="Executive Summary" value={d.executiveSummary} onChange={(v) => set("executiveSummary", v || null)} />
+              <ReadOrEditList editing={editing} label="Pain Points & Challenges" items={d.painPointsAndChallenges} onChange={(v) => set("painPointsAndChallenges", v)} />
+              <ReadOrEditList editing={editing} label="Goals & Expectations" items={d.goalsAndExpectations} onChange={(v) => set("goalsAndExpectations", v)} />
+              <ReadOrEditList editing={editing} label="Client Differentials" items={d.clientDifferentials} onChange={(v) => set("clientDifferentials", v)} />
 
-              {/* Financeiro & Negócio */}
-              <SectionHeader label="Financeiro & Negócio" />
+              <SectionHeader label="Financial & Business" />
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                <ReadOrEdit editing={editing} label="Valor do Deal / Proposta" value={d.dealValue} onChange={(v) => set("dealValue", v || null)} />
-                <ReadOrEdit editing={editing} label="Modelo de Receita" value={d.revenueModel} onChange={(v) => set("revenueModel", v || null)} />
-                <ReadOrEdit editing={editing} label="Prazo / Urgência do Cliente" value={d.clientTimeline} onChange={(v) => set("clientTimeline", v || null)} />
-                <ReadOrEdit editing={editing} label="Orçamento Mencionado" value={d.budgetMentioned} onChange={(v) => set("budgetMentioned", v || null)} />
+                <ReadOrEdit editing={editing} label="Deal / Proposal Value" value={d.dealValue} onChange={(v) => set("dealValue", v || null)} />
+                <ReadOrEdit editing={editing} label="Revenue Model" value={d.revenueModel} onChange={(v) => set("revenueModel", v || null)} />
+                <ReadOrEdit editing={editing} label="Client Timeline / Urgency" value={d.clientTimeline} onChange={(v) => set("clientTimeline", v || null)} />
+                <ReadOrEdit editing={editing} label="Budget Mentioned" value={d.budgetMentioned} onChange={(v) => set("budgetMentioned", v || null)} />
               </div>
 
-              {/* Contexto Técnico */}
-              <SectionHeader label="Contexto Técnico" />
-              <ReadOrEditTextarea editing={editing} label="Stack / Integrações Relevantes" value={d.techStack} onChange={(v) => set("techStack", v || null)} />
-              <ReadOrEditSelect editing={editing} label="Complexidade de Implementação" value={d.implementationComplexity} onChange={(v) => set("implementationComplexity", v || null)} options={["Baixa", "Média", "Alta"]} />
+              <SectionHeader label="Technical Context" />
+              <ReadOrEditTextarea editing={editing} label="Tech Stack / Integrations" value={d.techStack} onChange={(v) => set("techStack", v || null)} />
+              <ReadOrEditSelect editing={editing} label="Implementation Complexity" value={d.implementationComplexity} onChange={(v) => set("implementationComplexity", v || null)} options={[{ value: "Baixa", label: "Low" }, { value: "Média", label: "Medium" }, { value: "Alta", label: "High" }]} />
 
-              {/* Plano de Ação — Status */}
-              <SectionHeader label="Plano de Ação" />
+              <SectionHeader label="Action Plan" />
 
-              {/* Next step status card */}
               {(d.nextSteps?.length > 0 || d.nextContactDate) && (
                 <div className={`rounded-lg p-3 border ${stepStatus.bg} border-border`}>
                   <div className="flex items-center gap-2 mb-2">
@@ -170,7 +164,7 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                     <span className={`text-xs font-semibold ${stepStatus.color}`}>{stepStatus.label}</span>
                     {d.nextContactDate && (
                       <span className="text-xs text-muted-foreground ml-auto">
-                        Prazo: {new Date(d.nextContactDate).toLocaleDateString("pt-BR")}
+                        Deadline: {new Date(d.nextContactDate).toLocaleDateString("en-US")}
                       </span>
                     )}
                   </div>
@@ -183,7 +177,6 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                 </div>
               )}
 
-              {/* AI suggestion */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleAiSuggest}
@@ -191,7 +184,7 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                   className="h-8 px-3 flex items-center gap-1.5 text-xs font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors disabled:opacity-50"
                 >
                   {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                  Sugerir próximo passo com IA
+                  Suggest next step with AI
                 </button>
               </div>
 
@@ -199,32 +192,31 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
                   <p className="text-xs font-semibold text-primary flex items-center gap-1.5">
                     <Sparkles className="w-3 h-3" />
-                    Sugestão da IA
+                    AI Suggestion
                   </p>
                   <p className="text-sm text-foreground">{aiSuggestion.nextStep}</p>
-                  <p className="text-xs text-muted-foreground">Prazo sugerido: {new Date(aiSuggestion.deadline).toLocaleDateString("pt-BR")}</p>
+                  <p className="text-xs text-muted-foreground">Suggested deadline: {new Date(aiSuggestion.deadline).toLocaleDateString("en-US")}</p>
                   <div className="flex gap-2 mt-2">
                     <button onClick={applyAiSuggestion} className="h-7 px-3 bg-primary text-primary-foreground rounded-md text-xs font-medium hover:opacity-90 transition-all">
-                      Aplicar
+                      Apply
                     </button>
                     <button onClick={() => setAiSuggestion(null)} className="h-7 px-3 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      Descartar
+                      Discard
                     </button>
                   </div>
                 </div>
               )}
 
-              <ReadOrEditList editing={editing} label="Próximos Passos" items={d.nextSteps} onChange={(v) => set("nextSteps", v)} />
-              <ReadOrEditTextarea editing={editing} label="Responsáveis" value={d.responsibleParties} onChange={(v) => set("responsibleParties", v || null)} />
-              <ReadOrEdit editing={editing} label="Data do Próximo Contato" value={d.nextContactDate} onChange={(v) => set("nextContactDate", v || null)} type="date" />
+              <ReadOrEditList editing={editing} label="Next Steps" items={d.nextSteps} onChange={(v) => set("nextSteps", v)} />
+              <ReadOrEditTextarea editing={editing} label="Responsible Parties" value={d.responsibleParties} onChange={(v) => set("responsibleParties", v || null)} />
+              <ReadOrEdit editing={editing} label="Next Contact Date" value={d.nextContactDate} onChange={(v) => set("nextContactDate", v || null)} type="date" />
 
-              {/* Timeline de Reuniões */}
-              <SectionHeader label="Timeline de Reuniões" />
+              <SectionHeader label="Meeting Timeline" />
               {d.meetings.length > 0 ? (
                 <div className="space-y-2">
                   {d.meetings.map((m) => (
                     <div key={m.id} className="bg-secondary rounded-lg p-3">
-                      <p className="text-xs text-muted-foreground">{new Date(m.date).toLocaleDateString("pt-BR")}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(m.date).toLocaleDateString("en-US")}</p>
                       <p className="text-sm text-foreground mt-1">{m.summary}</p>
                     </div>
                   ))}
@@ -233,54 +225,53 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                 <p className="text-sm text-muted-foreground">—</p>
               )}
 
-              {/* Notas */}
-              <SectionHeader label="Notas" />
+              <SectionHeader label="Notes" />
               <textarea
                 value={d.notes}
                 onChange={(e) => editing ? set("notes", e.target.value) : onUpdate({ ...client, notes: e.target.value })}
-                placeholder="Adicione suas notas aqui..."
+                placeholder="Add your notes here..."
                 className="w-full h-24 bg-card border border-border rounded-lg p-3 text-sm placeholder:text-muted-foreground resize-none focus:outline-none focus:border-primary focus:shadow-input-focus transition-all"
               />
 
               <button className="w-full h-9 flex items-center justify-center gap-2 bg-secondary rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors mb-6">
                 <RotateCcw className="w-3.5 h-3.5" />
-                Re-analisar transcrição
+                Re-analyze transcript
               </button>
             </div>
 
-            {/* Sidebar - Inteligência Comercial */}
+            {/* Sidebar - Commercial Intelligence */}
             <div className="w-52 flex-shrink-0 space-y-4">
-              <SectionHeader label="Inteligência Comercial" />
+              <SectionHeader label="Commercial Intelligence" />
               {editing ? (
                 <>
                   <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">Estágio Atual</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">Current Stage</label>
                     <select value={d.dealStage} onChange={(e) => set("dealStage", e.target.value as DealStage)} className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary transition-all">
-                      {DEAL_STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      {DEAL_STAGES.map((s) => <option key={s} value={s}>{stageLabel(s)}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">Nível de Confiança (%)</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">Confidence Level (%)</label>
                     <input type="number" min={0} max={100} value={d.confidenceLevel ?? ""} onChange={(e) => set("confidenceLevel", e.target.value ? Number(e.target.value) : null)} className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary transition-all" />
                   </div>
-                  <ReadOrEditSelect editing label="Urgência" value={d.urgency} onChange={(v) => set("urgency", v || null)} options={["Baixa", "Média", "Alta"]} />
-                  <ReadOrEditSelect editing label="Risco" value={d.risk} onChange={(v) => set("risk", v || null)} options={["Baixa", "Média", "Alta"]} />
-                  <ReadOrEditSelect editing label="Potencial de Expansão" value={d.expansionPotential} onChange={(v) => set("expansionPotential", v || null)} options={["Baixo", "Médio", "Alto"]} />
-                  <ReadOrEditSelect editing label="Sensibilidade a Preço" value={d.priceSensitivity} onChange={(v) => set("priceSensitivity", v || null)} options={["Baixa", "Média", "Alta"]} />
+                  <ReadOrEditSelect editing label="Urgency" value={d.urgency} onChange={(v) => set("urgency", v || null)} options={[{ value: "Baixa", label: "Low" }, { value: "Média", label: "Medium" }, { value: "Alta", label: "High" }]} />
+                  <ReadOrEditSelect editing label="Risk" value={d.risk} onChange={(v) => set("risk", v || null)} options={[{ value: "Baixa", label: "Low" }, { value: "Média", label: "Medium" }, { value: "Alta", label: "High" }]} />
+                  <ReadOrEditSelect editing label="Expansion Potential" value={d.expansionPotential} onChange={(v) => set("expansionPotential", v || null)} options={[{ value: "Baixo", label: "Low" }, { value: "Médio", label: "Medium" }, { value: "Alto", label: "High" }]} />
+                  <ReadOrEditSelect editing label="Price Sensitivity" value={d.priceSensitivity} onChange={(v) => set("priceSensitivity", v || null)} options={[{ value: "Baixa", label: "Low" }, { value: "Média", label: "Medium" }, { value: "Alta", label: "High" }]} />
                 </>
               ) : (
                 <>
-                  <SidebarItem label="Estágio Atual">
+                  <SidebarItem label="Current Stage">
                     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${badge.bg} ${badge.text}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
-                      {d.dealStage}
+                      {stageLabel(d.dealStage)}
                     </span>
                   </SidebarItem>
-                  <SidebarItem label="Nível de Confiança"><span className="text-sm font-semibold text-foreground">{d.confidenceLevel != null ? `${d.confidenceLevel}%` : "—"}</span></SidebarItem>
-                  <SidebarItem label="Urgência"><span className="text-sm text-foreground">{d.urgency || "—"}</span></SidebarItem>
-                  <SidebarItem label="Risco"><span className="text-sm text-foreground">{d.risk || "—"}</span></SidebarItem>
-                  <SidebarItem label="Potencial de Expansão"><span className="text-sm text-foreground">{d.expansionPotential || "—"}</span></SidebarItem>
-                  <SidebarItem label="Sensibilidade a Preço"><span className="text-sm text-foreground">{d.priceSensitivity || "—"}</span></SidebarItem>
+                  <SidebarItem label="Confidence Level"><span className="text-sm font-semibold text-foreground">{d.confidenceLevel != null ? `${d.confidenceLevel}%` : "—"}</span></SidebarItem>
+                  <SidebarItem label="Urgency"><span className="text-sm text-foreground">{complexityLabel(d.urgency)}</span></SidebarItem>
+                  <SidebarItem label="Risk"><span className="text-sm text-foreground">{complexityLabel(d.risk)}</span></SidebarItem>
+                  <SidebarItem label="Expansion Potential"><span className="text-sm text-foreground">{potentialLabel(d.expansionPotential)}</span></SidebarItem>
+                  <SidebarItem label="Price Sensitivity"><span className="text-sm text-foreground">{sensitivityLabel(d.priceSensitivity)}</span></SidebarItem>
                 </>
               )}
             </div>
@@ -312,7 +303,7 @@ const ReadOrEdit = ({ editing, label, value, onChange, type = "text", className 
     {editing ? (
       <input type={type} value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary focus:shadow-input-focus transition-all" />
     ) : (
-      <p className="text-sm text-foreground">{type === "date" && value ? new Date(value).toLocaleDateString("pt-BR") : (value || "—")}</p>
+      <p className="text-sm text-foreground">{type === "date" && value ? new Date(value).toLocaleDateString("en-US") : (value || "—")}</p>
     )}
   </div>
 );
@@ -336,7 +327,7 @@ const ReadOrEditList = ({ editing, label, items, onChange }: {
   <div>
     <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
     {editing ? (
-      <textarea value={(items || []).join("\n")} onChange={(e) => onChange(e.target.value.split("\n").filter(Boolean))} rows={4} placeholder="Um por linha" className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm resize-none focus:outline-none focus:border-primary focus:shadow-input-focus transition-all" />
+      <textarea value={(items || []).join("\n")} onChange={(e) => onChange(e.target.value.split("\n").filter(Boolean))} rows={4} placeholder="One per line" className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm resize-none focus:outline-none focus:border-primary focus:shadow-input-focus transition-all" />
     ) : (items && items.length > 0) ? (
       <ul className="space-y-1">
         {items.map((item, i) => (
@@ -353,17 +344,17 @@ const ReadOrEditList = ({ editing, label, items, onChange }: {
 );
 
 const ReadOrEditSelect = ({ editing, label, value, onChange, options }: {
-  editing: boolean; label: string; value: string | null | undefined; onChange: (v: string) => void; options: string[];
+  editing: boolean; label: string; value: string | null | undefined; onChange: (v: string) => void; options: { value: string; label: string }[];
 }) => (
   <div>
     <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
     {editing ? (
       <select value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary transition-all">
         <option value="">—</option>
-        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     ) : (
-      <p className="text-sm text-foreground">{value || "—"}</p>
+      <p className="text-sm text-foreground">{value ? options.find(o => o.value === value)?.label || value : "—"}</p>
     )}
   </div>
 );
