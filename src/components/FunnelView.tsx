@@ -4,6 +4,7 @@ import { computeDealProbability } from "@/lib/dealProbability";
 import { Users, DollarSign, TrendingUp, Target } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { stageLabel, STAGE_SHORT } from "@/lib/i18n";
+import CompanyLogo from "@/components/CompanyLogo";
 
 // ─── Geometry ──────────────────────────────────────────────────────────────────
 const N       = DEAL_STAGES.length;
