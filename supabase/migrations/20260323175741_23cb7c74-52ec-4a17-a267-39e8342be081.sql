@@ -1,2 +1,0 @@
-UPDATE public.clients SET logo_url = 'https://www.google.com/s2/favicons?domain=submarino.com.br&sz=128' WHERE id = 'client-submarino';
-UPDATE public.clients SET logo_url = NULL WHERE client_name IN ('Ume', 'Trademaster', 'Delly''s', 'Allu');
