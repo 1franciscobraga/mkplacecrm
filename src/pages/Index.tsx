@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Client, DealStage } from "@/types/crm";
-import { addClient, updateClient, updateClientStage, deleteClient, subscribeToClients } from "@/store/clientStore";
+import { addClient, updateClient, updateClientStage, deleteClient, subscribeToClients, backfillLogos } from "@/store/clientStore";
 import Navbar from "@/components/Navbar";
 import StatsBar from "@/components/StatsBar";
 import PipelineBoard from "@/components/PipelineBoard";
