@@ -31,7 +31,7 @@ const TranscriptModal = ({ open, onClose, onSave }: TranscriptModalProps) => {
       setExtracted(normalizeExtractedData((data ?? {}) as Partial<ExtractedData>));
     } catch (e: any) {
       console.error("Extraction error:", e);
-      setError(e?.message || "Erro ao extrair dados. Tente novamente.");
+      setError(e?.message || "Error extracting data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ const TranscriptModal = ({ open, onClose, onSave }: TranscriptModalProps) => {
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            <h2 className="font-semibold text-base">Inserir Transcrição</h2>
+            <h2 className="font-semibold text-base">Insert Transcript</h2>
           </div>
           <button onClick={resetAndClose} className="p-1.5 hover:bg-secondary rounded-lg transition-colors">
             <X className="w-4 h-4 text-muted-foreground" />
@@ -80,7 +80,7 @@ const TranscriptModal = ({ open, onClose, onSave }: TranscriptModalProps) => {
           <textarea
             value={transcript}
             onChange={(e) => setTranscript(e.target.value)}
-            placeholder="Cole sua transcrição de reunião aqui..."
+            placeholder="Paste your meeting transcript here..."
             className="w-full h-48 bg-card border border-border rounded-lg p-4 text-sm placeholder:text-muted-foreground resize-none focus:outline-none focus:border-primary focus:shadow-input-focus transition-all"
             disabled={loading}
           />
@@ -95,12 +95,12 @@ const TranscriptModal = ({ open, onClose, onSave }: TranscriptModalProps) => {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Extraindo dados...
+                Extracting data...
               </>
             ) : (
               <>
                 <Sparkles className="w-4 h-4" />
-                Extrair com IA
+                Extract with AI
               </>
             )}
           </button>

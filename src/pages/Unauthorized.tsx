@@ -9,16 +9,16 @@ const Unauthorized = () => {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm text-center">
         <ShieldX className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h1 className="text-xl font-bold text-foreground mb-2">Acesso não autorizado</h1>
+        <h1 className="text-xl font-bold text-foreground mb-2">Unauthorized Access</h1>
         <p className="text-sm text-muted-foreground mb-1">
-          O email <strong className="text-foreground">{user?.email}</strong> não possui permissão para acessar este sistema.
+          The email <strong className="text-foreground">{user?.email}</strong> does not have permission to access this system.
         </p>
         <p className="text-sm text-muted-foreground mb-6">
-          Entre em contato com o administrador para solicitar acesso.
+          Contact the administrator to request access.
         </p>
         <Button variant="outline" onClick={signOut} className="gap-2">
           <LogOut className="w-4 h-4" />
-          Sair
+          Sign Out
         </Button>
       </div>
     </div>

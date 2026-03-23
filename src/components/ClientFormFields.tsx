@@ -6,6 +6,7 @@ import {
   PotentialLevel,
   SensitivityLevel,
 } from "@/types/crm";
+import { stageLabel } from "@/lib/i18n";
 
 interface ClientFormFieldsProps {
   data: ExtractedData;
@@ -31,12 +32,12 @@ const ClientFormFields = ({
   return (
     <div className="flex gap-6">
       <div className="flex-1 space-y-6">
-        <SectionHeader label="Identificação" />
+        <SectionHeader label="Identification" />
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Field
               id="clientName"
-              label="Nome do Cliente *"
+              label="Client Name *"
               value={data.clientName}
               onChange={(v) => set("clientName", v)}
               hasError={!!clientNameError}
@@ -45,40 +46,40 @@ const ClientFormFields = ({
           </div>
           <Field
             id="projectName"
-            label="Projeto / Nome Interno"
+            label="Project / Internal Name"
             value={data.projectName || ""}
             onChange={(v) => set("projectName", v || null)}
           />
           <Field
             id="meetingDate"
-            label="Data da Reunião"
+            label="Meeting Date"
             value={data.meetingDate || ""}
             onChange={(v) => set("meetingDate", v || null)}
             type="date"
           />
           <Field
             id="businessModel"
-            label="Modelo de Negócio"
+            label="Business Model"
             value={data.businessModel || ""}
             onChange={(v) => set("businessModel", v || null)}
-            placeholder="Ex: Marketplace White Label B2B"
+            placeholder="E.g.: White Label B2B Marketplace"
           />
         </div>
 
-        <SectionHeader label="Contato Principal" />
+        <SectionHeader label="Primary Contact" />
         <div className="grid grid-cols-2 gap-4">
           <Field
             id="contactName"
-            label="Nome do Contato"
+            label="Contact Name"
             value={data.contactName || ""}
             onChange={(v) => set("contactName", v || null)}
           />
           <Field
             id="contactRole"
-            label="Cargo / Função"
+            label="Role / Position"
             value={data.contactRole || ""}
             onChange={(v) => set("contactRole", v || null)}
-            placeholder="Ex: CEO, CTO"
+            placeholder="E.g.: CEO, CTO"
           />
           <Field
             id="contactEmail"
@@ -86,106 +87,106 @@ const ClientFormFields = ({
             value={data.contactEmail || ""}
             onChange={(v) => set("contactEmail", v || null)}
             type="email"
-            placeholder="Preencher manualmente"
+            placeholder="Fill in manually"
           />
           <Field
             id="contactPhone"
-            label="Telefone"
+            label="Phone"
             value={data.contactPhone || ""}
             onChange={(v) => set("contactPhone", v || null)}
             type="tel"
-            placeholder="Preencher manualmente"
+            placeholder="Fill in manually"
           />
           <Field
             id="companyGroup"
-            label="Empresa / Grupo Econômico"
+            label="Company / Economic Group"
             value={data.companyGroup || ""}
             onChange={(v) => set("companyGroup", v || null)}
-            placeholder="Holding ou empresa-mãe"
+            placeholder="Holding or parent company"
           />
           <Field
             id="leadSource"
-            label="Origem do Cliente"
+            label="Lead Source"
             value={data.leadSource || ""}
             onChange={(v) => set("leadSource", v || null)}
-            placeholder="Ex: indicação do João, inbound, evento"
+            placeholder="E.g.: referral, inbound, event"
           />
         </div>
 
-        <SectionHeader label="Análise Comercial" />
+        <SectionHeader label="Commercial Analysis" />
         <TextareaField
           id="executiveSummary"
-          label="Resumo Executivo"
+          label="Executive Summary"
           value={data.executiveSummary || ""}
           onChange={(v) => set("executiveSummary", v || null)}
-          placeholder="Resumo geral da reunião"
+          placeholder="General meeting summary"
           rows={3}
         />
         <TextareaField
           id="painPoints"
-          label="Dores & Desafios"
+          label="Pain Points & Challenges"
           value={(data.painPointsAndChallenges || []).join("\n")}
           onChange={(v) => set("painPointsAndChallenges", parseLines(v))}
-          placeholder="Um por linha"
+          placeholder="One per line"
         />
         <TextareaField
           id="goals"
-          label="Objetivos & Expectativas"
+          label="Goals & Expectations"
           value={(data.goalsAndExpectations || []).join("\n")}
           onChange={(v) => set("goalsAndExpectations", parseLines(v))}
-          placeholder="Um por linha"
+          placeholder="One per line"
         />
         <TextareaField
           id="differentials"
-          label="Diferenciais do Cliente"
+          label="Client Differentials"
           value={(data.clientDifferentials || []).join("\n")}
           onChange={(v) => set("clientDifferentials", parseLines(v))}
-          placeholder="Vantagens competitivas mencionadas, uma por linha"
+          placeholder="Competitive advantages mentioned, one per line"
         />
 
-        <SectionHeader label="Financeiro & Negócio" />
+        <SectionHeader label="Financial & Business" />
         <div className="grid grid-cols-2 gap-4">
           <Field
             id="dealValue"
-            label="Valor do Deal / Proposta"
+            label="Deal / Proposal Value"
             value={data.dealValue || ""}
             onChange={(v) => set("dealValue", v || null)}
-            placeholder="Ex: R$ 75.000 + 2,5% GMV"
+            placeholder="E.g.: R$ 75,000 + 2.5% GMV"
           />
           <Field
             id="revenueModel"
-            label="Modelo de Receita"
+            label="Revenue Model"
             value={data.revenueModel || ""}
             onChange={(v) => set("revenueModel", v || null)}
-            placeholder="Ex: Setup + variável"
+            placeholder="E.g.: Setup + variable"
           />
           <Field
             id="clientTimeline"
-            label="Prazo / Urgência do Cliente"
+            label="Client Timeline / Urgency"
             value={data.clientTimeline || ""}
             onChange={(v) => set("clientTimeline", v || null)}
-            placeholder="Ex: MVP em 60 dias"
+            placeholder="E.g.: MVP in 60 days"
           />
           <Field
             id="budgetMentioned"
-            label="Orçamento Mencionado"
+            label="Budget Mentioned"
             value={data.budgetMentioned || ""}
             onChange={(v) => set("budgetMentioned", v || null)}
-            placeholder="Restrições ou aprovações"
+            placeholder="Constraints or approvals"
           />
         </div>
 
-        <SectionHeader label="Contexto Técnico" />
+        <SectionHeader label="Technical Context" />
         <TextareaField
           id="techStack"
-          label="Stack / Integrações Relevantes"
+          label="Tech Stack / Relevant Integrations"
           value={data.techStack || ""}
           onChange={(v) => set("techStack", v || null)}
-          placeholder="APIs, sistemas, plataformas mencionadas"
+          placeholder="APIs, systems, platforms mentioned"
         />
         <div>
           <label htmlFor="implementationComplexity" className="block text-xs font-medium text-muted-foreground mb-1.5">
-            Complexidade de Implementação
+            Implementation Complexity
           </label>
           <select
             id="implementationComplexity"
@@ -193,33 +194,33 @@ const ClientFormFields = ({
             onChange={(e) => set("implementationComplexity", (e.target.value || null) as ComplexityLevel | null)}
             className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary focus:shadow-input-focus transition-all"
           >
-            <option value="">Não definida</option>
-            <option value="Baixa">Baixa</option>
-            <option value="Média">Média</option>
-            <option value="Alta">Alta</option>
+            <option value="">Not defined</option>
+            <option value="Baixa">Low</option>
+            <option value="Média">Medium</option>
+            <option value="Alta">High</option>
           </select>
         </div>
 
-        <SectionHeader label="Plano de Ação" />
+        <SectionHeader label="Action Plan" />
         <TextareaField
           id="nextSteps"
-          label="Próximos Passos"
+          label="Next Steps"
           value={(data.nextSteps || []).join("\n")}
           onChange={(v) => set("nextSteps", parseLines(v))}
-          placeholder="Um por linha"
+          placeholder="One per line"
         />
         <TextareaField
           id="responsibleParties"
-          label="Responsáveis"
+          label="Responsible Parties"
           value={data.responsibleParties || ""}
           onChange={(v) => set("responsibleParties", v || null)}
-          placeholder="Quem é responsável por cada ação"
+          placeholder="Who is responsible for each action"
           rows={2}
         />
         <div className="grid grid-cols-2 gap-4">
           <Field
             id="nextContactDate"
-            label="Data do Próximo Contato"
+            label="Next Contact Date"
             value={data.nextContactDate || ""}
             onChange={(v) => set("nextContactDate", v || null)}
             type="date"
@@ -229,10 +230,10 @@ const ClientFormFields = ({
 
       {showSidebar && (
         <div className="w-56 flex-shrink-0 space-y-4">
-          <SectionHeader label="Análise IA" />
+          <SectionHeader label="AI Analysis" />
           <div>
             <label htmlFor="dealStage" className="block text-xs font-medium text-muted-foreground mb-1.5">
-              Etapa Sugerida *
+              Suggested Stage *
             </label>
             <select
               id="dealStage"
@@ -242,39 +243,39 @@ const ClientFormFields = ({
             >
               {DEAL_STAGES.map((stage) => (
                 <option key={stage} value={stage}>
-                  {stage}
+                  {stageLabel(stage)}
                 </option>
               ))}
             </select>
           </div>
-          <SidebarField label="Confiança" value={data.confidenceLevel != null ? `${data.confidenceLevel}%` : "—"} />
+          <SidebarField label="Confidence" value={data.confidenceLevel != null ? `${data.confidenceLevel}%` : "—"} />
           <SelectField
             id="urgency"
-            label="Urgência"
+            label="Urgency"
             value={data.urgency || ""}
             onChange={(v) => set("urgency", (v || null) as ComplexityLevel | null)}
-            options={["Baixa", "Média", "Alta"]}
+            options={[{ value: "Baixa", label: "Low" }, { value: "Média", label: "Medium" }, { value: "Alta", label: "High" }]}
           />
           <SelectField
             id="risk"
-            label="Risco"
+            label="Risk"
             value={data.risk || ""}
             onChange={(v) => set("risk", (v || null) as ComplexityLevel | null)}
-            options={["Baixa", "Média", "Alta"]}
+            options={[{ value: "Baixa", label: "Low" }, { value: "Média", label: "Medium" }, { value: "Alta", label: "High" }]}
           />
           <SelectField
             id="expansionPotential"
-            label="Potencial de Expansão"
+            label="Expansion Potential"
             value={data.expansionPotential || ""}
             onChange={(v) => set("expansionPotential", (v || null) as PotentialLevel | null)}
-            options={["Baixo", "Médio", "Alto"]}
+            options={[{ value: "Baixo", label: "Low" }, { value: "Médio", label: "Medium" }, { value: "Alto", label: "High" }]}
           />
           <SelectField
             id="priceSensitivity"
-            label="Sensibilidade a Preço"
+            label="Price Sensitivity"
             value={data.priceSensitivity || ""}
             onChange={(v) => set("priceSensitivity", (v || null) as SensitivityLevel | null)}
-            options={["Baixa", "Média", "Alta"]}
+            options={[{ value: "Baixa", label: "Low" }, { value: "Média", label: "Medium" }, { value: "Alta", label: "High" }]}
           />
         </div>
       )}
@@ -367,7 +368,7 @@ const SelectField = ({
   label: string;
   value: string;
   onChange: (v: string) => void;
-  options: string[];
+  options: { value: string; label: string }[];
 }) => (
   <div>
     <label htmlFor={id} className="block text-xs font-medium text-muted-foreground mb-1.5">
@@ -381,8 +382,8 @@ const SelectField = ({
     >
       <option value="">—</option>
       {options.map((option) => (
-        <option key={option} value={option}>
-          {option}
+        <option key={option.value} value={option.value}>
+          {option.label}
         </option>
       ))}
     </select>

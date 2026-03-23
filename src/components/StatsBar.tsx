@@ -18,10 +18,10 @@ const StatsBar = ({ clients }: StatsBarProps) => {
   }).length;
 
   const stats = [
-    { label: "Total Clientes", value: totalClients.toString(), icon: Users },
-    { label: "Deals Abertos", value: openDeals.toString(), icon: TrendingUp },
-    { label: "Pipeline Total", value: `${totalClients} deals`, icon: DollarSign },
-    { label: "Fechados Este Mês", value: closedWonThisMonth.toString(), icon: CheckCircle },
+    { label: "Total Clients", value: totalClients.toString(), icon: Users },
+    { label: "Open Deals", value: openDeals.toString(), icon: TrendingUp },
+    { label: "Total Pipeline", value: `${totalClients} deals`, icon: DollarSign },
+    { label: "Closed This Month", value: closedWonThisMonth.toString(), icon: CheckCircle },
   ];
 
   return (

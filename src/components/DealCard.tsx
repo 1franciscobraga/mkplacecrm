@@ -70,11 +70,11 @@ const DealCard = ({ client, onClick, onDragStart, onEdit, onDelete }: DealCardPr
               <div className="absolute right-0 top-full mt-1 w-44 bg-card rounded-lg shadow-modal border border-border py-1 z-30">
                 <button onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors">
                   <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-                  Editar
+                  Edit
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                   <Trash2 className="w-3.5 h-3.5" />
-                  Excluir cliente
+                  Delete Client
                 </button>
               </div>
             )}
@@ -89,7 +89,7 @@ const DealCard = ({ client, onClick, onDragStart, onEdit, onDelete }: DealCardPr
         )}
         {client.dealStage !== "Go-Live e Implantação" && (
           <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${probabilityBg(prob.overall)}`}>
-            {prob.overall}% fechar
+            {prob.overall}% close
           </span>
         )}
       </div>
@@ -102,14 +102,14 @@ const DealCard = ({ client, onClick, onDragStart, onEdit, onDelete }: DealCardPr
             </span>
           )}
           {isOverdue && (
-            <span className="flex items-center gap-1 text-[10px] font-medium text-red-600" title="Próximo passo atrasado">
+            <span className="flex items-center gap-1 text-[10px] font-medium text-red-600" title="Next step overdue">
               <AlertCircle className="w-3.5 h-3.5" />
             </span>
           )}
         </div>
         {client.meetingDate && (
           <p className="text-xs text-gray-400">
-            {new Date(client.meetingDate).toLocaleDateString("pt-BR")}
+            {new Date(client.meetingDate).toLocaleDateString("en-US")}
           </p>
         )}
       </div>

@@ -4,6 +4,7 @@ import DealCard from "./DealCard";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { computeDealProbability, probabilityBg, probabilityColor } from "@/lib/dealProbability";
 import { Inbox, Building2, User, Zap, AlertTriangle, TrendingUp } from "lucide-react";
+import { stageLabel, complexityLabel } from "@/lib/i18n";
 import React from "react";
 
 interface PipelineBoardProps {
@@ -49,7 +50,7 @@ function CompanyHoverCard({ client, onClientClick }: { client: Client; onClientC
               )}
             </div>
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${probabilityBg(prob.overall)}`}>
-              {prob.overall}% fechamento
+              {prob.overall}% close
             </span>
           </div>
         </div>
@@ -86,7 +87,7 @@ function CompanyHoverCard({ client, onClientClick }: { client: Client; onClientC
                 "bg-gray-100 text-gray-600"
               }`}>
                 <Zap className="w-2.5 h-2.5" />
-                {client.urgency}
+                {complexityLabel(client.urgency)}
               </span>
             )}
             {client.risk && (
@@ -96,25 +97,25 @@ function CompanyHoverCard({ client, onClientClick }: { client: Client; onClientC
                 "bg-emerald-50 text-emerald-700"
               }`}>
                 <AlertTriangle className="w-2.5 h-2.5" />
-                Risco {client.risk}
+                Risk {complexityLabel(client.risk)}
               </span>
             )}
           </div>
         )}
 
         <div className="border-t border-border pt-3 space-y-1.5">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mb-2">Probabilidade de fechamento</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mb-2">Close Probability</p>
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
               <span className="w-20 flex-shrink-0">Mkplace fit</span>
               <MiniBar value={prob.mkplace} color="bg-violet-400" />
             </div>
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span className="w-20 flex-shrink-0">Cliente</span>
+              <span className="w-20 flex-shrink-0">Client</span>
               <MiniBar value={prob.client} color="bg-blue-400" />
             </div>
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span className="w-20 flex-shrink-0">Transcrição</span>
+              <span className="w-20 flex-shrink-0">Transcript</span>
               <MiniBar value={prob.transcript} color="bg-amber-400" />
             </div>
           </div>
@@ -176,7 +177,7 @@ const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete
           >
             <div className="px-4 py-3 flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
-              <h3 className="font-medium text-sm text-foreground">{stage}</h3>
+              <h3 className="font-medium text-sm text-foreground">{stageLabel(stage)}</h3>
               <span className="text-xs text-muted-foreground ml-auto bg-card rounded-full px-2 py-0.5">
                 {stageClients.length}
               </span>
@@ -204,9 +205,9 @@ const PipelineBoard = ({ clients, onStageChange, onClientClick, onEdit, onDelete
                 <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
                   <Inbox className="w-8 h-8 mb-2 opacity-30" />
                   <p className="text-xs text-center leading-relaxed">
-                    Nenhum card nesta etapa.
+                    No cards in this stage.
                     <br />
-                    Adicione um novo cliente.
+                    Add a new client.
                   </p>
                 </div>
               ) : (
