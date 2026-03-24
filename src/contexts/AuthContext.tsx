@@ -72,14 +72,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkingTokenRef.current = token;
     setLoading(true);
 
-    supabase
-      .from("authorized_emails")
-      .select("id")
-      .eq("email", email)
-      .in("status", AUTHORIZED_STATUSES)
-      .limit(1)
-      .maybeSingle()
-      .then(async ({ data, error }) => {
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("authorized_emails")
+          .select("id")
+          .eq("email", email)
+          .in("status", AUTHORIZED_STATUSES)
+          .limit(1)
+          .maybeSingle();
+
         if (error || !data) {
           console.warn("Unauthorized session blocked", error);
           await supabase.auth.signOut();
@@ -94,18 +96,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         checkedTokenRef.current = token;
         logAccess(email);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Authorization check failed:", error);
-      })
-      .finally(() => {
+      } finally {
         if (checkingTokenRef.current === token) {
           checkingTokenRef.current = null;
         }
         if (isMountedRef.current) {
           setLoading(false);
         }
-      });
+      }
+    })();
   }, [logAccess]);
 
   useEffect(() => {
