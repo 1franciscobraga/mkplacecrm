@@ -58,6 +58,7 @@ export interface Client {
   risk: ComplexityLevel | null;
   expansionPotential: PotentialLevel | null;
   priceSensitivity: SensitivityLevel | null;
+  manualProbability: number | null;
   // System
   leadSource: string | null;
   logoUrl: string | null;

@@ -315,6 +315,11 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                   <SidebarItem label="Risk"><span className="text-sm text-foreground">{complexityLabel(d.risk)}</span></SidebarItem>
                   <SidebarItem label="Expansion Potential"><span className="text-sm text-foreground">{potentialLabel(d.expansionPotential)}</span></SidebarItem>
                   <SidebarItem label="Price Sensitivity"><span className="text-sm text-foreground">{sensitivityLabel(d.priceSensitivity)}</span></SidebarItem>
+                  <SidebarItem label="Close Probability">
+                    <span className="text-sm font-semibold text-foreground">
+                      {d.manualProbability != null ? `${d.manualProbability}% (manual)` : "Auto"}
+                    </span>
+                  </SidebarItem>
                 </>
               )}
             </div>
