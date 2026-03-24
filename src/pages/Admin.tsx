@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Send, ArrowLeft, Loader2, CheckCircle, Clock, UserPlus, Lock, Eye, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash2, Send, ArrowLeft, Loader2, CheckCircle, Clock, UserPlus, Lock, Eye, ChevronDown, ChevronUp, Check, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const ADMIN_PASSWORD = "scala2026";
@@ -129,7 +129,11 @@ const Admin = () => {
     setInviting(email);
     try {
       const { data, error } = await supabase.functions.invoke("invite-user", {
-        body: { email },
+        body: {
+          email,
+          action: "login",
+          redirectTo: window.location.origin,
+        },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -190,6 +194,41 @@ const Admin = () => {
     toast.success(`${email} removed.`);
   };
 
+  const handleApprove = async (entry: AuthorizedEmail) => {
+    try {
+      const { error } = await supabase
+        .from("authorized_emails")
+        .update({ status: "active", added_by: "admin" } as any)
+        .eq("id", entry.id);
+
+      if (error) throw error;
+
+      await fetchEmails();
+      toast.success(`Solicitação aprovada para ${entry.email}. Enviando magic link...`);
+      await sendInvite(entry.email);
+    } catch (err: any) {
+      console.error("Approve error:", err);
+      toast.error(`Falha ao aprovar: ${err.message || "Unknown error"}`);
+    }
+  };
+
+  const handleReject = async (id: string, email: string) => {
+    try {
+      const { error } = await supabase
+        .from("authorized_emails")
+        .update({ status: "rejected", added_by: "admin" } as any)
+        .eq("id", id);
+
+      if (error) throw error;
+
+      await fetchEmails();
+      toast.success(`Solicitação rejeitada para ${email}.`);
+    } catch (err: any) {
+      console.error("Reject error:", err);
+      toast.error(`Falha ao rejeitar: ${err.message || "Unknown error"}`);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
@@ -202,6 +241,9 @@ const Admin = () => {
     if (/Tablet|iPad/i.test(ua)) return "Tablet";
     return "Desktop";
   };
+
+  const isAuthorizedStatus = (status: string) => status === "active" || status === "invited";
+  const pendingRequests = emails.filter((entry) => entry.status === "requested").length;
 
   // Password gate
   if (!authenticated) {
@@ -254,6 +296,11 @@ const Admin = () => {
             <p className="text-sm text-muted-foreground">
               Add investor emails to send them a magic link invite. Track access activity below.
             </p>
+            {pendingRequests > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Solicitações pendentes: {pendingRequests}
+              </p>
+            )}
           </div>
         </div>
 
@@ -279,7 +326,7 @@ const Admin = () => {
         {/* Email list */}
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border bg-secondary/30">
-            <div className="grid grid-cols-[1fr_80px_70px_110px_110px_80px] gap-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <div className="grid grid-cols-[1fr_110px_70px_110px_110px_120px] gap-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               <span>Email</span>
               <span>Status</span>
               <span className="text-center">Views</span>
@@ -306,7 +353,7 @@ const Admin = () => {
                 return (
                   <div key={entry.id}>
                     <div
-                      className="grid grid-cols-[1fr_80px_70px_110px_110px_80px] gap-3 items-center px-4 py-3 hover:bg-secondary/20 transition-colors cursor-pointer"
+                      className="grid grid-cols-[1fr_110px_70px_110px_110px_120px] gap-3 items-center px-4 py-3 hover:bg-secondary/20 transition-colors cursor-pointer"
                       onClick={() => fetchHistory(entry.email)}
                     >
                       <span className="text-sm font-medium text-foreground truncate flex items-center gap-1.5">
@@ -316,13 +363,28 @@ const Admin = () => {
                       <span className="flex items-center gap-1.5">
                         {entry.status === "invited" ? (
                           <>
-                            <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                            <span className="text-xs text-emerald-600 font-medium">Invited</span>
+                            <CheckCircle className="w-3.5 h-3.5 text-primary" />
+                            <span className="text-xs text-primary font-medium">Invited</span>
+                          </>
+                        ) : entry.status === "active" ? (
+                          <>
+                            <CheckCircle className="w-3.5 h-3.5 text-primary" />
+                            <span className="text-xs text-primary font-medium">Active</span>
+                          </>
+                        ) : entry.status === "requested" ? (
+                          <>
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground font-medium">Requested</span>
+                          </>
+                        ) : entry.status === "rejected" ? (
+                          <>
+                            <XCircle className="w-3.5 h-3.5 text-destructive" />
+                            <span className="text-xs text-destructive font-medium">Rejected</span>
                           </>
                         ) : (
                           <>
-                            <Clock className="w-3.5 h-3.5 text-amber-500" />
-                            <span className="text-xs text-amber-600 font-medium">Pending</span>
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground font-medium">Pending</span>
                           </>
                         )}
                       </span>
@@ -343,18 +405,37 @@ const Admin = () => {
                         {summary ? formatDate(summary.last_access) : "—"}
                       </span>
                       <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => sendInvite(entry.email)}
-                          disabled={inviting === entry.email}
-                          className="p-1.5 rounded-md hover:bg-secondary transition-colors disabled:opacity-50"
-                          title="Resend invite"
-                        >
-                          {inviting === entry.email ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-                          ) : (
-                            <Send className="w-3.5 h-3.5 text-muted-foreground" />
-                          )}
-                        </button>
+                        {entry.status === "requested" ? (
+                          <>
+                            <button
+                              onClick={() => handleApprove(entry)}
+                              className="p-1.5 rounded-md hover:bg-secondary transition-colors"
+                              title="Approve"
+                            >
+                              <Check className="w-3.5 h-3.5 text-primary" />
+                            </button>
+                            <button
+                              onClick={() => handleReject(entry.id, entry.email)}
+                              className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"
+                              title="Reject"
+                            >
+                              <X className="w-3.5 h-3.5 text-destructive" />
+                            </button>
+                          </>
+                        ) : isAuthorizedStatus(entry.status) ? (
+                          <button
+                            onClick={() => sendInvite(entry.email)}
+                            disabled={inviting === entry.email}
+                            className="p-1.5 rounded-md hover:bg-secondary transition-colors disabled:opacity-50"
+                            title="Resend invite"
+                          >
+                            {inviting === entry.email ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                            ) : (
+                              <Send className="w-3.5 h-3.5 text-muted-foreground" />
+                            )}
+                          </button>
+                        ) : null}
                         <button
                           onClick={() => handleRemove(entry.id, entry.email)}
                           className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"

@@ -12,11 +12,15 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const ACCESS_LOG_KEY = "last-access-logged";
+const AUTHORIZED_STATUSES = ["active", "invited"];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const loggedRef = useRef(false);
+  const isMountedRef = useRef(true);
+  const checkedTokenRef = useRef<string | null>(null);
+  const checkingTokenRef = useRef<string | null>(null);
 
   const logAccess = useCallback(async (email: string) => {
     // Prevent duplicate logs in same session/page load
@@ -42,40 +46,100 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const validateAuthorizedAccess = useCallback((nextSession: Session | null) => {
+    if (!isMountedRef.current) return;
+
+    const email = nextSession?.user?.email?.toLowerCase();
+    const token = nextSession?.access_token;
+
+    if (!email || !token) {
+      checkedTokenRef.current = null;
+      checkingTokenRef.current = null;
+      loggedRef.current = false;
+      setLoading(false);
+      return;
+    }
+
+    if (checkedTokenRef.current === token) {
+      setLoading(false);
+      return;
+    }
+
+    if (checkingTokenRef.current === token) {
+      return;
+    }
+
+    checkingTokenRef.current = token;
+    setLoading(true);
+
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("authorized_emails")
+          .select("id")
+          .eq("email", email)
+          .in("status", AUTHORIZED_STATUSES)
+          .limit(1)
+          .maybeSingle();
+
+        if (error || !data) {
+          console.warn("Unauthorized session blocked", error);
+          await supabase.auth.signOut();
+
+          if (!isMountedRef.current) return;
+          setSession(null);
+          sessionStorage.removeItem(ACCESS_LOG_KEY);
+          loggedRef.current = false;
+          checkedTokenRef.current = null;
+          return;
+        }
+
+        checkedTokenRef.current = token;
+        logAccess(email);
+      } catch (error) {
+        console.error("Authorization check failed:", error);
+      } finally {
+        if (checkingTokenRef.current === token) {
+          checkingTokenRef.current = null;
+        }
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
+      }
+    })();
+  }, [logAccess]);
+
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, nextSession) => {
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
         setSession(nextSession);
-        setLoading(false);
-        if (nextSession?.user?.email) {
-          logAccess(nextSession.user.email);
-        }
+        validateAuthorizedAccess(nextSession);
       }
     );
 
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      if (!isMounted) return;
+      if (!isMountedRef.current) return;
       setSession(currentSession);
-      setLoading(false);
-      if (currentSession?.user?.email) {
-        logAccess(currentSession.user.email);
-      }
+      validateAuthorizedAccess(currentSession);
     });
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [logAccess]);
+  }, [validateAuthorizedAccess]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
     setSession(null);
+    setLoading(false);
     sessionStorage.removeItem(ACCESS_LOG_KEY);
     loggedRef.current = false;
+    checkedTokenRef.current = null;
+    checkingTokenRef.current = null;
   };
 
   return (
