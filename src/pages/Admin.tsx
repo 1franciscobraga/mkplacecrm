@@ -363,8 +363,8 @@ const Admin = () => {
                       <span className="flex items-center gap-1.5">
                         {entry.status === "invited" ? (
                           <>
-                            <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                            <span className="text-xs text-emerald-600 font-medium">Invited</span>
+                            <CheckCircle className="w-3.5 h-3.5 text-primary" />
+                            <span className="text-xs text-primary font-medium">Invited</span>
                           </>
                         ) : entry.status === "active" ? (
                           <>
@@ -373,8 +373,8 @@ const Admin = () => {
                           </>
                         ) : entry.status === "requested" ? (
                           <>
-                            <Clock className="w-3.5 h-3.5 text-amber-500" />
-                            <span className="text-xs text-amber-600 font-medium">Requested</span>
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground font-medium">Requested</span>
                           </>
                         ) : entry.status === "rejected" ? (
                           <>
@@ -383,8 +383,8 @@ const Admin = () => {
                           </>
                         ) : (
                           <>
-                            <Clock className="w-3.5 h-3.5 text-amber-500" />
-                            <span className="text-xs text-amber-600 font-medium">Pending</span>
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground font-medium">Pending</span>
                           </>
                         )}
                       </span>
