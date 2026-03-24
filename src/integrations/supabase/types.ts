@@ -89,6 +89,7 @@ export type Database = {
           implementation_complexity: string | null
           lead_source: string | null
           logo_url: string | null
+          manual_probability: number | null
           meeting_date: string | null
           meetings: Json
           next_contact_date: string | null
@@ -127,6 +128,7 @@ export type Database = {
           implementation_complexity?: string | null
           lead_source?: string | null
           logo_url?: string | null
+          manual_probability?: number | null
           meeting_date?: string | null
           meetings?: Json
           next_contact_date?: string | null
@@ -165,6 +167,7 @@ export type Database = {
           implementation_complexity?: string | null
           lead_source?: string | null
           logo_url?: string | null
+          manual_probability?: number | null
           meeting_date?: string | null
           meetings?: Json
           next_contact_date?: string | null
