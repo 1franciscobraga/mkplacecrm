@@ -12,6 +12,20 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [successTitle, setSuccessTitle] = useState("");
+  const [successDescription, setSuccessDescription] = useState("");
+
+  const parseFunctionError = async (fnError: unknown, fallbackMessage: string) => {
+    const context = (fnError as { context?: Response } | null)?.context;
+    if (!context) return fallbackMessage;
+
+    try {
+      const payload = await context.json();
+      return payload?.error || fallbackMessage;
+    } catch {
+      return fallbackMessage;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,30 +35,50 @@ const Login = () => {
     const normalizedEmail = email.trim().toLowerCase();
 
     try {
-      // Check whitelist first
-      const { data: whitelisted } = await supabase
-        .from("authorized_emails")
-        .select("id")
-        .eq("email", normalizedEmail)
-        .maybeSingle();
+      if (mode === "login") {
+        const { data, error: fnError } = await supabase.functions.invoke("invite-user", {
+          body: {
+            email: normalizedEmail,
+            action: "login",
+            redirectTo: window.location.origin,
+          },
+        });
 
-      if (!whitelisted) {
-        setError(
-          mode === "request"
-            ? "Este email ainda não foi liberado. Solicite acesso ao administrador."
-            : "Email não autorizado. Verifique com o administrador."
-        );
-        setLoading(false);
+        if (fnError) {
+          throw new Error(await parseFunctionError(fnError, "Erro ao enviar o magic link."));
+        }
+
+        if (data?.error) throw new Error(data.error);
+
+        setSuccessTitle("Link enviado!");
+        setSuccessDescription("Clique no link recebido para entrar no CRM neste navegador.");
+        setSent(true);
         return;
       }
 
-      // Email is authorized — send magic link via edge function
       const { data, error: fnError } = await supabase.functions.invoke("invite-user", {
-        body: { email: normalizedEmail },
+        body: {
+          email: normalizedEmail,
+          action: "request",
+        },
       });
 
-      if (fnError) throw fnError;
+      if (fnError) {
+        throw new Error(await parseFunctionError(fnError, "Erro ao solicitar acesso."));
+      }
+
       if (data?.error) throw new Error(data.error);
+
+      if (data?.result === "already_authorized") {
+        setSuccessTitle("Email já liberado");
+        setSuccessDescription("Seu email já está autorizado. Use o botão Login para receber o magic link.");
+      } else if (data?.result === "already_requested") {
+        setSuccessTitle("Solicitação já enviada");
+        setSuccessDescription("Seu pedido já está pendente de aprovação no admin.");
+      } else {
+        setSuccessTitle("Solicitação enviada");
+        setSuccessDescription("Seu pedido foi registrado e está aguardando aprovação no admin.");
+      }
 
       setSent(true);
     } catch (err: any) {
@@ -60,16 +94,22 @@ const Login = () => {
         <div className="w-full max-w-sm">
           <div className="bg-card border border-border rounded-xl p-8 text-center">
             <CheckCircle className="w-12 h-12 text-primary mx-auto mb-4" />
-            <h2 className="text-lg font-semibold text-foreground mb-2">Link enviado!</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-2">{successTitle}</h2>
             <p className="text-sm text-muted-foreground mb-1">
               Verifique sua caixa de entrada em
             </p>
             <p className="text-sm font-medium text-foreground mb-4">{email}</p>
             <p className="text-xs text-muted-foreground mb-6">
-              Clique no link do email para acessar o CRM.
+              {successDescription}
             </p>
             <button
-              onClick={() => { setSent(false); setEmail(""); setMode("choose"); }}
+              onClick={() => {
+                setSent(false);
+                setEmail("");
+                setMode("choose");
+                setSuccessTitle("");
+                setSuccessDescription("");
+              }}
               className="text-sm text-primary hover:underline"
             >
               Usar outro email
@@ -154,7 +194,7 @@ const Login = () => {
             ) : mode === "login" ? (
               "Enviar link de acesso"
             ) : (
-              "Verificar e solicitar acesso"
+              "Solicitar acesso"
             )}
           </Button>
         </form>
