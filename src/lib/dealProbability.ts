@@ -36,6 +36,12 @@ export function computeDealProbability(client: Client): ProbabilityBreakdown {
     return { overall: 100, mkplace: 100, client: 100, transcript: 100 };
   }
 
+  // Manual override: if set, use it as the overall probability
+  if (client.manualProbability != null) {
+    const manual = Math.max(0, Math.min(100, client.manualProbability));
+    return { overall: manual, mkplace: manual, client: manual, transcript: manual };
+  }
+
   const stageBase = STAGE_BASE[client.dealStage];
 
   // --- Mkplace score: complexity fit, expansion potential, model clarity ---

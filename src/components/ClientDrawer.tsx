@@ -296,6 +296,11 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                   <ReadOrEditSelect editing label="Risk" value={d.risk} onChange={(v) => set("risk", v || null)} options={[{ value: "Baixa", label: "Low" }, { value: "Média", label: "Medium" }, { value: "Alta", label: "High" }]} />
                   <ReadOrEditSelect editing label="Expansion Potential" value={d.expansionPotential} onChange={(v) => set("expansionPotential", v || null)} options={[{ value: "Baixo", label: "Low" }, { value: "Médio", label: "Medium" }, { value: "Alto", label: "High" }]} />
                   <ReadOrEditSelect editing label="Price Sensitivity" value={d.priceSensitivity} onChange={(v) => set("priceSensitivity", v || null)} options={[{ value: "Baixa", label: "Low" }, { value: "Média", label: "Medium" }, { value: "Alta", label: "High" }]} />
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">Close Probability (%) — Manual</label>
+                    <input type="number" min={0} max={100} value={d.manualProbability ?? ""} onChange={(e) => set("manualProbability", e.target.value ? Number(e.target.value) : null)} placeholder="Auto" className="w-full h-9 px-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-primary transition-all" />
+                    <p className="text-[10px] text-muted-foreground mt-1">Leave empty to use auto-calculation</p>
+                  </div>
                 </>
               ) : (
                 <>
@@ -310,6 +315,11 @@ const ClientDrawer = ({ client, onClose, onUpdate }: ClientDrawerProps) => {
                   <SidebarItem label="Risk"><span className="text-sm text-foreground">{complexityLabel(d.risk)}</span></SidebarItem>
                   <SidebarItem label="Expansion Potential"><span className="text-sm text-foreground">{potentialLabel(d.expansionPotential)}</span></SidebarItem>
                   <SidebarItem label="Price Sensitivity"><span className="text-sm text-foreground">{sensitivityLabel(d.priceSensitivity)}</span></SidebarItem>
+                  <SidebarItem label="Close Probability">
+                    <span className="text-sm font-semibold text-foreground">
+                      {d.manualProbability != null ? `${d.manualProbability}% (manual)` : "Auto"}
+                    </span>
+                  </SidebarItem>
                 </>
               )}
             </div>
